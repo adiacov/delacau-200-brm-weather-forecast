@@ -20,6 +20,8 @@ Public page after GitHub Pages is enabled:
 - `brevet_delacau_weather_research.py` — generator script
 - `delacau_200_weather_31may2026.md` — markdown summary
 - `PROJECT_INSTRUCTIONS.md` — maintenance/update instructions
+- `ASSISTANT_CONTEXT.md` — quick context for future assistant sessions
+- `ANNOUNCEMENT.md` — short Telegram announcement text
 
 ## Design goal
 
