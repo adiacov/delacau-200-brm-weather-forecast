@@ -83,18 +83,17 @@ TEXT = {
 }
 
 PLATFORM_STATUS = {
-    "Combined forecast": "Main page: practical average / most probable interpretation from working sources",
+    "AccuWeather": "Day/night Moldova forecast, applied to route timing",
     "MET Norway / Yr": "Hourly point forecast along the route corridor",
     "7Timer Civil": "3-hourly point forecast along the route corridor",
     "Weather-Forecast.com": "3-period Chisinau forecast, applied to route timing",
-    "AccuWeather": "Day/night Moldova forecast, applied to route timing",
 }
 
 SOURCES = {
+    "accuweather": "AccuWeather",
     "met-norway": "MET Norway / Yr",
     "7timer": "7Timer Civil",
     "weather-forecast": "Weather-Forecast.com",
-    "accuweather": "AccuWeather",
 }
 
 
