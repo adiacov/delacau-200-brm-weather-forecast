@@ -39,8 +39,8 @@ WEATHER_POINTS = [
 TEXT = {
     "ro": {
         "lang_name": "Romana", "html_lang": "ro", "dir": "ltr", "active": "RO",
-        "title": "Delacau 200 BRM — prognoza meteo",
-        "subtitle": "Prognoza meteo pentru duminica, 31 mai 2026",
+        "title": "Vremea pe traseu pentru Delacau 200 BRM",
+        "subtitle": "Prognoza ora cu ora pentru 31 mai 2026 · Start: 06:00 · Scenarii: 8h / 10h / 13h",
         "last": "Ultima cercetare", "forecast_for": "Prognoza pentru", "start": "Start", "route": "Ruta",
         "summary": "Concluzie pe scurt", "overall": "General", "temp": "Temperatura", "wind": "Vant", "rain": "Ploaie",
         "route_info": "Info ruta", "route_note": "Ruta GPX este inclusa in proiect. Pozitia pe traseu este estimata din GPX pentru fiecare scenariu de finisare.",
@@ -53,8 +53,8 @@ TEXT = {
     },
     "en": {
         "lang_name": "English", "html_lang": "en", "dir": "ltr", "active": "EN",
-        "title": "Delacau 200 BRM — weather forecast",
-        "subtitle": "Weather forecast for Sunday, 31 May 2026",
+        "title": "Weather on the route for Delacau 200 BRM",
+        "subtitle": "Hour-by-hour forecast for 31 May 2026 · Start: 06:00 · Scenarios: 8h / 10h / 13h",
         "last": "Last researched", "forecast_for": "Forecast for", "start": "Start", "route": "Route",
         "summary": "Short conclusion", "overall": "Overall", "temp": "Temperature", "wind": "Wind", "rain": "Rain",
         "route_info": "Route info", "route_note": "The GPX route is included in this project. Rider position is estimated from the GPX for each finish-time scenario.",
@@ -67,8 +67,8 @@ TEXT = {
     },
     "ru": {
         "lang_name": "Русский", "html_lang": "ru", "dir": "ltr", "active": "RU",
-        "title": "Delacau 200 BRM — прогноз погоды",
-        "subtitle": "Прогноз погоды на воскресенье, 31 мая 2026",
+        "title": "Погода на маршруте Delacau 200 BRM",
+        "subtitle": "Почасовой прогноз на 31 мая 2026 · Старт: 06:00 · Сценарии: 8ч / 10ч / 13ч",
         "last": "Последнее обновление", "forecast_for": "Прогноз на", "start": "Старт", "route": "Маршрут",
         "summary": "Краткий вывод", "overall": "В целом", "temp": "Температура", "wind": "Ветер", "rain": "Дождь",
         "route_info": "Информация о маршруте", "route_note": "GPX маршрута включен в проект. Позиция велосипедиста для каждого сценария рассчитывается по GPX.",
