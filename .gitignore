@@ -1,0 +1,95 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Python tooling/cache
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.pyre/
+.pytype/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.ipynb_checkpoints/
+
+# IDE / editors
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+Desktop.ini
+
+# Logs / temp
+*.log
+*.tmp
+*.temp
+.cache/
+tmp/
+temp/
+
+# Secrets / credentials
+.env.*
+*.secret
+*client_secret*.json
+*credentials*.json
+*token*.json
+
+# Node / frontend, in case the static page later grows into a site build
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.parcel-cache/
+.next/
+out/
+
+# GitHub Pages build artifacts if Jekyll is used later
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
