@@ -443,12 +443,9 @@ def lang_links(current):
     return links
 
 
-def source_links_html(lang, prefix="", active="combined"):
-    labels = {"ro": "Compara surse", "en": "Compare sources", "ru": "Сравнить источники"}
-    main_label = {"ro": "Prognoza medie", "en": "Combined forecast", "ru": "Средний прогноз"}
+def source_links_html(lang, prefix="", active="accuweather"):
+    labels = {"ro": "Alege sursa meteo", "en": "Choose weather source", "ru": "Выберите источник погоды"}
     html = [f'<section class="section"><h2>{escape(labels[lang])}</h2><div class="source-links">']
-    combined_cls = ' class="active"' if active == "combined" else ""
-    html.append(f'<a{combined_cls} href="{prefix}index.html">{escape(main_label[lang])}</a>')
     for slug, name in SOURCES.items():
         suffix = "" if lang == "ro" else f"-{lang}"
         cls = ' class="active"' if active == slug else ""
@@ -457,7 +454,7 @@ def source_links_html(lang, prefix="", active="combined"):
     return "\n".join(html)
 
 
-def page_html(lang, rows_by_duration, researched_at, root=False, title_override=None, subtitle_override=None, extra_note=None, source_status=None, hide_lang=False, show_source_links=False, source_prefix="", active_source="combined", lang_links_override=None):
+def page_html(lang, rows_by_duration, researched_at, root=False, title_override=None, subtitle_override=None, extra_note=None, source_status=None, hide_lang=False, show_source_links=False, source_prefix="", active_source="accuweather", lang_links_override=None):
     t = TEXT[lang]
     links = lang_links_override or lang_links("root" if root else lang)
     conclusion_text, temp_range, wind_avg, total_rain = conclusion(rows_by_duration, lang)
@@ -542,7 +539,6 @@ def main():
     met = fetch_metno()
     sev = fetch_7timer()
     wf = fetch_weatherforecast_day_forecast()
-    rows_by_duration = build_rows(met, sev)
     met_rows = build_rows(met, {})
     sev_rows = build_rows({}, sev)
     wf_rows = build_rows_from_periods(wf)
@@ -555,22 +551,22 @@ def main():
     (ROOT / "sources").mkdir(exist_ok=True)
     (ROOT / "assets").mkdir(exist_ok=True)
 
-    avg_note = {
-        "ro": "Aceasta este prognoza medie/probabila, calculata din mai multe surse meteo. Pentru comparatie, poti deschide prognoza separata pentru fiecare sursa.",
-        "en": "This is the combined / most probable forecast from multiple weather sources. For comparison, separate provider pages are available below.",
-        "ru": "Это средний / наиболее вероятный прогноз по нескольким погодным источникам. Для сравнения ниже доступны отдельные страницы по каждому источнику.",
-    }
-    (ROOT / "index.html").write_text(page_html("ro", rows_by_duration, researched_at, root=True, extra_note=avg_note["ro"], show_source_links=True), encoding="utf-8")
-    (ROOT / "ro" / "index.html").write_text(page_html("ro", rows_by_duration, researched_at, extra_note=avg_note["ro"], show_source_links=True, source_prefix="../"), encoding="utf-8")
-    (ROOT / "en" / "index.html").write_text(page_html("en", rows_by_duration, researched_at, extra_note=avg_note["en"], show_source_links=True, source_prefix="../"), encoding="utf-8")
-    (ROOT / "ru" / "index.html").write_text(page_html("ru", rows_by_duration, researched_at, extra_note=avg_note["ru"], show_source_links=True, source_prefix="../"), encoding="utf-8")
-
     source_configs = {
         "met-norway": ("MET Norway / Yr", met_rows, "Hourly point forecast from MET Norway / Yr only."),
         "7timer": ("7Timer Civil", sev_rows, "3-hourly forecast from 7Timer only; values are matched to the nearest hour."),
         "weather-forecast": ("Weather-Forecast.com", wf_rows, "3-period Chisinau forecast from Weather-Forecast.com only; values are applied to estimated route positions."),
         "accuweather": ("AccuWeather", accuweather_rows, "AccuWeather public day/night forecast only; values are applied to estimated route positions."),
     }
+    default_note = {
+        "ro": "Pagina implicita foloseste AccuWeather. Poti schimba sursa meteo din butoanele de mai jos.",
+        "en": "Default page uses AccuWeather. You can switch the weather source using the buttons below.",
+        "ru": "Страница по умолчанию использует AccuWeather. Источник погоды можно переключить кнопками ниже.",
+    }
+    (ROOT / "index.html").write_text(page_html("ro", accuweather_rows, researched_at, root=True, title_override="Prognoza AccuWeather pentru Delacau 200 BRM", subtitle_override="Prognoza pe traseu pentru 31 mai 2026 · Start: 06:00 · Scenarii: 8h / 10h / 13h", extra_note=default_note["ro"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, active_source="accuweather"), encoding="utf-8")
+    (ROOT / "ro" / "index.html").write_text(page_html("ro", accuweather_rows, researched_at, title_override="Prognoza AccuWeather pentru Delacau 200 BRM", subtitle_override="Prognoza pe traseu pentru 31 mai 2026 · Start: 06:00 · Scenarii: 8h / 10h / 13h", extra_note=default_note["ro"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, source_prefix="../", active_source="accuweather"), encoding="utf-8")
+    (ROOT / "en" / "index.html").write_text(page_html("en", accuweather_rows, researched_at, title_override="AccuWeather forecast for Delacau 200 BRM", subtitle_override="Route forecast for 31 May 2026 · Start: 06:00 · Scenarios: 8h / 10h / 13h", extra_note=default_note["en"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, source_prefix="../", active_source="accuweather"), encoding="utf-8")
+    (ROOT / "ru" / "index.html").write_text(page_html("ru", accuweather_rows, researched_at, title_override="Прогноз AccuWeather для Delacau 200 BRM", subtitle_override="Прогноз по маршруту на 31 мая 2026 · Старт: 06:00 · Сценарии: 8ч / 10ч / 13ч", extra_note=default_note["ru"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, source_prefix="../", active_source="accuweather"), encoding="utf-8")
+
     for slug, (name, source_rows, note) in source_configs.items():
         for lang in ["ro", "en", "ru"]:
             suffix = "" if lang == "ro" else f"-{lang}"
@@ -578,7 +574,7 @@ def main():
             subtitle = "Provider-specific forecast · 31 May 2026 · 8h / 10h / 13h scenarios"
             lang_override = {"ro": f"{slug}.html", "en": f"{slug}-en.html", "ru": f"{slug}-ru.html"}
             (ROOT / "sources" / f"{slug}{suffix}.html").write_text(page_html(lang, source_rows, researched_at, title_override=title, subtitle_override=subtitle, extra_note=note, source_status={name: note}, show_source_links=True, source_prefix="../", active_source=slug, lang_links_override=lang_override), encoding="utf-8")
-    (ROOT / "delacau_200_weather_31may2026.md").write_text(markdown(rows_by_duration, researched_at), encoding="utf-8")
+    (ROOT / "delacau_200_weather_31may2026.md").write_text(markdown(accuweather_rows, researched_at), encoding="utf-8")
     # Keep descriptive HTML copy for compatibility with the earlier report name.
     (ROOT / "delacau_200_weather_31may2026.html").write_text((ROOT / "en" / "index.html").read_text(encoding="utf-8"), encoding="utf-8")
     print("Generated index.html, ro/, en/, ru/, accuweather/ and markdown report")
