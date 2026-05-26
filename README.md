@@ -4,24 +4,37 @@ Static multilingual weather forecast page for cyclists riding **Delacau 200 BRM*
 
 The page helps riders understand the expected weather **along the route**, depending on their estimated finish time: **8h, 10h or 13h**.
 
-Public page after GitHub Pages is enabled:
+Public page:
 
 `https://adiacov.github.io/delacau-200-brm-weather-forecast/`
 
+## Current product behavior
+
+- The default page uses **AccuWeather**.
+- The old combined/average forecast was removed.
+- Users can switch between separate provider pages:
+  - AccuWeather
+  - MET Norway / Yr
+  - 7Timer Civil
+  - Weather-Forecast.com
+- Each provider page shows only that provider's data.
+- If max/gust wind is unavailable from a provider, the page shows `— max` instead of inventing a value.
+
 ## What this project contains
 
-- `index.html` — Romanian default page
-- `ro/index.html` — Romanian page
-- `en/index.html` — English page
-- `ru/index.html` — Russian page
+- `index.html` — Romanian default page, AccuWeather
+- `ro/index.html` — Romanian page, AccuWeather
+- `en/index.html` — English page, AccuWeather
+- `ru/index.html` — Russian page, AccuWeather
+- `sources/` — provider-specific pages in Romanian, English and Russian
 - `assets/style.css` — shared mobile-first design, light/dark theme support
 - `assets/theme.js` — visible light/dark theme toggle
 - `delacau-200-brm.gpx` — route GPX used for hourly route-position estimates
 - `brevet_delacau_weather_research.py` — generator script
-- `delacau_200_weather_31may2026.md` — markdown summary
+- `.github/workflows/update-forecast.yml` — daily automatic update around 06:00 Moldova time
+- `ANNOUNCEMENT.md` — Telegram announcement texts
 - `PROJECT_INSTRUCTIONS.md` — maintenance/update instructions
 - `ASSISTANT_CONTEXT.md` — quick context for future assistant sessions
-- `ANNOUNCEMENT.md` — short Telegram announcement text
 
 ## Design goal
 
@@ -63,5 +76,5 @@ After GitHub builds the page, it should be available at:
 ## Future improvements
 
 - Review and polish Romanian/Russian/English wording.
-- Update the forecast daily closer to the event.
+- Update/add weather providers if better public sources are found.
 - Optionally add an interactive route map later.

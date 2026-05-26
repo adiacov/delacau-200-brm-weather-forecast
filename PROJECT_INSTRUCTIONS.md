@@ -4,22 +4,26 @@
 
 This project maintains a static, GitHub Pages-ready weather forecast for **Delacau 200 BRM**, Moldova, **31 May 2026**.
 
-The audience is cyclists, not developers. The main page must answer:
+The audience is cyclists, not developers. The page must answer:
 
 - What weather should I expect on the route?
 - What changes if I finish in 8h, 10h or 13h?
+- Which weather provider am I looking at?
 - When was the forecast last researched?
 
 ## Important product rules
 
 - Romanian is the default language and must be written **without diacritics**.
-- Supported pages:
-  - `index.html` — Romanian default
-  - `ro/index.html` — Romanian
-  - `en/index.html` — English
-  - `ru/index.html` — Russian
+- Supported main pages:
+  - `index.html` — Romanian default, currently AccuWeather
+  - `ro/index.html` — Romanian, currently AccuWeather
+  - `en/index.html` — English, currently AccuWeather
+  - `ru/index.html` — Russian, currently AccuWeather
+- Provider-specific pages live in `sources/`.
+- There is **no combined/average forecast anymore**. Do not reintroduce provider averaging unless the user explicitly asks.
+- Each provider page must show only data from that provider. If a provider does not return max/gust wind, show `— max`; do not invent it by copying average wind.
 - Keep the visible report rider-friendly.
-- Do not show raw JSON or technical provider data in the main content.
+- Do not show raw JSON or confusing provider data in the main content.
 - Keep forecast sources / technical notes at the bottom.
 - Always show `Last researched` near the top.
 - The site must remain static and GitHub Pages friendly: no build system required.
@@ -30,11 +34,17 @@ The audience is cyclists, not developers. The main page must answer:
 - `delacau-200-brm.gpx` — route file used to estimate rider position by kilometer.
 - `assets/style.css` — shared responsive styling.
 - `assets/theme.js` — light/dark theme toggle.
+- `.github/workflows/update-forecast.yml` — daily GitHub Actions update at about 06:00 Moldova time.
+- `ANNOUNCEMENT.md` — Telegram announcement texts.
 - Generated pages:
   - `index.html`
   - `ro/index.html`
   - `en/index.html`
   - `ru/index.html`
+  - `sources/accuweather.html`, `sources/accuweather-en.html`, `sources/accuweather-ru.html`
+  - `sources/met-norway.html`, `sources/met-norway-en.html`, `sources/met-norway-ru.html`
+  - `sources/7timer.html`, `sources/7timer-en.html`, `sources/7timer-ru.html`
+  - `sources/weather-forecast.html`, `sources/weather-forecast-en.html`, `sources/weather-forecast-ru.html`
   - `delacau_200_weather_31may2026.html`
   - `delacau_200_weather_31may2026.md`
 
@@ -43,8 +53,15 @@ The audience is cyclists, not developers. The main page must answer:
 1. Reads the GPX route.
 2. For each finish scenario — 8h, 10h, 13h — estimates cyclist position every hour.
 3. Fetches weather from public sources with short timeouts.
-4. Combines the result into simple rider-facing rows: time, approximate km, route area, temperature, rain, wind, advice.
-5. Generates all language pages.
+4. Generates separate provider pages for AccuWeather, MET Norway / Yr, 7Timer Civil and Weather-Forecast.com.
+5. Generates Romanian, English and Russian versions.
+
+## Provider behavior
+
+- AccuWeather: currently the default page; public page gives day/night forecast and gust/max wind.
+- MET Norway / Yr: useful hourly point source; may not always expose gust/max wind.
+- 7Timer Civil: 3-hourly source; no true max/gust wind.
+- Weather-Forecast.com: broad Chisinau 3-period forecast; no true max/gust wind.
 
 ## Network/API rules
 
@@ -52,15 +69,6 @@ The audience is cyclists, not developers. The main page must answer:
 - If a platform fails, record it and do not retry it repeatedly in the same run.
 - Do not block the whole update on one failing provider.
 - No API keys should be required.
-
-Known source behavior from previous work:
-
-- MET Norway / Yr: useful hourly source.
-- 7Timer: useful 3-hourly cross-check.
-- Weather-Forecast.com: broad Chisinau cross-check only.
-- Open-Meteo: had repeated 502/504/timeouts in this environment.
-- wttr.in: date-specific endpoint was not useful for 31 May.
-- timeanddate.com: blocked by anti-bot page.
 
 ## Daily update workflow
 
@@ -76,7 +84,9 @@ Then review the generated page locally before committing, especially:
 - `Last researched` time
 - 8h / 10h / 13h scenario rows
 - all language pages still render
-- no visible table cells contain missing values such as `—` where real forecast data is expected
+- provider source buttons work and AccuWeather is first
+- no combined/average forecast appears
+- no invented max/gust wind values; use `— max` when unavailable
 - for UI changes, compare before/after with `git diff` and open the local page in a browser
 
 Commit and push only after this check:
@@ -90,7 +100,7 @@ git push
 ## GitHub Pages
 
 The repository is intended to publish from branch `main`, folder `/`.
-The public URL should be:
+The public URL is:
 
 `https://adiacov.github.io/delacau-200-brm-weather-forecast/`
 

@@ -18,7 +18,11 @@ Core rules:
 
 - Audience: non-technical cyclists.
 - Romanian default, without diacritics.
-- Pages: `index.html`, `ro/index.html`, `en/index.html`, `ru/index.html`.
+- Main pages are AccuWeather-based by default: `index.html`, `ro/index.html`, `en/index.html`, `ru/index.html`.
+- Provider-specific pages are in `sources/`.
+- Do **not** restore the old combined/average forecast. It was removed because it could show wrong numbers.
+- Each provider page must use only that provider's data.
+- If a provider does not provide max/gust wind, show `— max`; do not copy average wind into max.
 - Keep visible content simple and rider-friendly.
 - Weather/provider technical details stay at the bottom.
 - Use short network timeouts; do not repeatedly call failing APIs.
@@ -30,7 +34,7 @@ Daily update command:
 python3 brevet_delacau_weather_research.py
 ```
 
-Then:
+Then review locally and run:
 
 ```bash
 git add .
