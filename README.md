@@ -1,41 +1,65 @@
 # Delacau 200 BRM Weather Forecast
 
-Weather forecast report for **Delacau 200 BRM**, Moldova, Sunday **31 May 2026**.
+Static multilingual weather forecast page for cyclists riding **Delacau 200 BRM** in Moldova on **Sunday, 31 May 2026**.
 
-The main visual report is:
+The page helps riders understand the expected weather **along the route**, depending on their estimated finish time: **8h, 10h or 13h**.
 
-- `index.html` — GitHub Pages-ready page
-- `delacau_200_weather_31may2026.html` — same report with descriptive filename
+Public page after GitHub Pages is enabled:
 
-Supporting files:
+`https://adiacov.github.io/delacau-200-brm-weather-forecast/`
 
-- `delacau-200-brm.gpx` — route GPX
-- `delacau_200_weather_31may2026.md` — markdown/text version
+## What this project contains
+
+- `index.html` — Romanian default page
+- `ro/index.html` — Romanian page
+- `en/index.html` — English page
+- `ru/index.html` — Russian page
+- `assets/style.css` — shared mobile-first design, light/dark theme support
+- `assets/theme.js` — visible light/dark theme toggle
+- `delacau-200-brm.gpx` — route GPX used for hourly route-position estimates
 - `brevet_delacau_weather_research.py` — generator script
+- `delacau_200_weather_31may2026.md` — markdown summary
+- `PROJECT_INSTRUCTIONS.md` — maintenance/update instructions
 
-## Current status
+## Design goal
 
-This is a static HTML report generated from several weather sources with short request timeouts. The technical source list is intentionally placed at the bottom of the page; the top of the page is meant for normal riders.
+This is for non-technical riders. The visible page should be simple, practical and easy to read on a phone. Technical details and weather-source notes belong at the bottom only.
 
-## GitHub Pages
+## Updating the forecast
 
-This project is ready to publish with GitHub Pages.
+Run:
 
-Recommended settings in GitHub:
+```bash
+python3 brevet_delacau_weather_research.py
+```
 
-1. Repository **Settings**
-2. **Pages**
+Then review the generated pages and commit the result:
+
+```bash
+git add .
+git commit -m "Update forecast for YYYY-MM-DD"
+git push
+```
+
+The script uses public weather sources with short request timeouts. No API keys are required.
+
+## GitHub Pages setup
+
+In GitHub:
+
+1. Open repository **Settings**
+2. Open **Pages**
 3. Source: **Deploy from a branch**
 4. Branch: **main**
 5. Folder: **/ (root)**
 6. Save
 
-After GitHub builds the page, the public URL should be:
+After GitHub builds the page, it should be available at:
 
 `https://adiacov.github.io/delacau-200-brm-weather-forecast/`
 
-## Possible next steps
+## Future improvements
 
-- Review the Romanian, Russian and English text.
+- Review and polish Romanian/Russian/English wording.
 - Update the forecast daily closer to the event.
 - Optionally add an interactive route map later.
