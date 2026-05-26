@@ -70,14 +70,16 @@ From the project folder:
 python3 brevet_delacau_weather_research.py
 ```
 
-Then review the generated page locally, especially:
+Then review the generated page locally before committing, especially:
 
 - top summary
 - `Last researched` time
 - 8h / 10h / 13h scenario rows
 - all language pages still render
+- no visible table cells contain missing values such as `—` where real forecast data is expected
+- for UI changes, compare before/after with `git diff` and open the local page in a browser
 
-Commit and push:
+Commit and push only after this check:
 
 ```bash
 git add .

@@ -42,7 +42,7 @@ TEXT = {
         "title": "Vremea pe traseu pentru Delacau 200 BRM",
         "subtitle": "Prognoza ora cu ora pentru 31 mai 2026 · Start: 06:00 · Scenarii: 8h / 10h / 13h",
         "last": "Ultima cercetare", "forecast_for": "Prognoza pentru", "start": "Start", "route": "Ruta", "auto_update": "Pagina este planificata sa se actualizeze zilnic in jurul orei 06:00, ora Moldovei.",
-        "summary": "Concluzie pe scurt", "overall": "General", "temp": "Temperatura", "wind": "Vant", "rain": "Ploaie",
+        "summary": "Concluzie pe scurt", "overall": "General", "temp": "Temperatura", "wind": "Vant mediu/max", "wind_dir": "Directie vant", "rain": "Ploaie",
         "route_info": "Cum se citeste prognoza", "route_note": "Alege scenariul cel mai apropiat de timpul tau estimat de finish: 8h, 10h sau 13h. Pentru fiecare ora vezi kilometrul aproximativ si vremea probabila in acea zona. Daca ritmul tau difera, foloseste kilometrul aproximativ ca reper.",
         "scenario": "Scenariu", "finish": "finisare in", "time": "Ora", "km": "Km aprox.", "sector": "Zona traseului", "weather": "Vreme", "advice": "Recomandare",
         "dry": "Uscat", "caution": "Atentie", "mostly_dry": "In mare parte uscat", "shell": "Tine la indemana o geaca usoara de ploaie",
@@ -56,7 +56,7 @@ TEXT = {
         "title": "Weather on the route for Delacau 200 BRM",
         "subtitle": "Hour-by-hour forecast for 31 May 2026 · Start: 06:00 · Scenarios: 8h / 10h / 13h",
         "last": "Last researched", "forecast_for": "Forecast for", "start": "Start", "route": "Route", "auto_update": "This page is scheduled to update daily around 06:00 Moldova time.",
-        "summary": "Short conclusion", "overall": "Overall", "temp": "Temperature", "wind": "Wind", "rain": "Rain",
+        "summary": "Short conclusion", "overall": "Overall", "temp": "Temperature", "wind": "Avg/max wind", "wind_dir": "Wind direction", "rain": "Rain",
         "route_info": "How to read this forecast", "route_note": "Choose the scenario closest to your estimated finish time: 8h, 10h or 13h. For each hour you see the approximate kilometer and the likely weather in that area. If your pace is different, use the approximate kilometer as your reference.",
         "scenario": "Scenario", "finish": "finish in", "time": "Time", "km": "Approx km", "sector": "Route area", "weather": "Weather", "advice": "Advice",
         "dry": "Dry", "caution": "Caution", "mostly_dry": "Mostly dry", "shell": "Keep a light rain shell accessible",
@@ -70,7 +70,7 @@ TEXT = {
         "title": "Погода на маршруте Delacau 200 BRM",
         "subtitle": "Почасовой прогноз на 31 мая 2026 · Старт: 06:00 · Сценарии: 8ч / 10ч / 13ч",
         "last": "Последнее обновление", "forecast_for": "Прогноз на", "start": "Старт", "route": "Маршрут", "auto_update": "Страница запланирована к ежедневному обновлению около 06:00 по времени Молдовы.",
-        "summary": "Краткий вывод", "overall": "В целом", "temp": "Температура", "wind": "Ветер", "rain": "Дождь",
+        "summary": "Краткий вывод", "overall": "В целом", "temp": "Температура", "wind": "Ветер ср/макс", "wind_dir": "Направление ветра", "rain": "Дождь",
         "route_info": "Как читать этот прогноз", "route_note": "Выберите сценарий, который ближе всего к вашему ожидаемому времени финиша: 8ч, 10ч или 13ч. Для каждого часа указан примерный километр и ожидаемая погода в этой зоне. Если ваш темп отличается, ориентируйтесь по примерному километру.",
         "scenario": "Сценарий", "finish": "финиш за", "time": "Время", "km": "Км прибл.", "sector": "Участок маршрута", "weather": "Погода", "advice": "Совет",
         "dry": "Сухо", "caution": "Внимание", "mostly_dry": "В основном сухо", "shell": "Держать легкую дождевую куртку под рукой",
@@ -163,6 +163,13 @@ def seven_speed_to_kmh(code):
     return {1: 1, 2: 7, 3: 20, 4: 34, 5: 45, 6: 57, 7: 70, 8: 85}.get(code)
 
 
+def degrees_to_cardinal(deg):
+    if deg is None:
+        return "—"
+    dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+    return dirs[round(float(deg) / 45) % 8]
+
+
 def fetch_metno():
     out = {}
     for km, name, lat, lon in WEATHER_POINTS:
@@ -180,6 +187,7 @@ def fetch_metno():
                     "temp": details.get("air_temperature"),
                     "wind": wind_ms_to_kmh(details.get("wind_speed")),
                     "gust": wind_ms_to_kmh(details.get("wind_speed_of_gust")),
+                    "dir": degrees_to_cardinal(details.get("wind_from_direction")),
                     "cloud": details.get("cloud_area_fraction"),
                     "rain": nxt.get("details", {}).get("precipitation_amount", 0),
                     "symbol": nxt.get("summary", {}).get("symbol_code", ""),
@@ -240,6 +248,8 @@ def build_rows(met, sev):
             temp = m.get("temp") if m else s.get("temp2m") if s else None
             rain = m.get("rain", 0) if m else 0
             wind = m.get("wind") if m else seven_speed_to_kmh(s.get("wind10m", {}).get("speed")) if s else None
+            wind_max = (m.get("gust") or wind) if m else wind
+            wind_dir = m.get("dir") if m else s.get("wind10m", {}).get("direction", "—") if s else "—"
             cloud = m.get("cloud") if m else None
             condition = m.get("symbol", "").replace("_", " ") if m else s.get("weather", "") if s else ""
             if not condition and cloud is not None:
@@ -255,6 +265,8 @@ def build_rows(met, sev):
                 "temp": temp,
                 "rain": rain,
                 "wind": wind,
+                "wind_max": wind_max,
+                "wind_dir": wind_dir or "—",
                 "condition": condition or "dry",
                 "caution": caution,
             })
@@ -321,7 +333,7 @@ def page_html(lang, rows_by_duration, researched_at, root=False):
     for duration, rows in rows_by_duration.items():
         html.append(f'<section class="scenario"><h3>{escape(t["scenario"])}: {escape(t["finish"])} {duration} {escape(t["hours"])} (06:00–{START_HOUR+duration:02d}:00)</h3>')
         html.append('<div class="table-wrap"><table><thead><tr>')
-        for head in [t["time"], t["km"], t["sector"], t["temp"], t["rain"], t["wind"], t["advice"]]:
+        for head in [t["time"], t["km"], t["sector"], t["temp"], t["rain"], t["wind"], t["wind_dir"], t["advice"]]:
             html.append(f'<th>{escape(head)}</th>')
         html.append('</tr></thead><tbody>')
         cards_mobile = ['<div class="cards-mobile">']
@@ -331,9 +343,10 @@ def page_html(lang, rows_by_duration, researched_at, root=False):
             advice = t["shell"] if r["caution"] else t["mostly_dry"]
             rain = f'{(r["rain"] or 0):.1f} mm'
             temp = fmt_num(r["temp"], "°C")
-            wind = fmt_num(r["wind"], " km/h")
-            html.append(f'<tr><td><b>{r["time"]}</b></td><td>{r["km"]}</td><td>{escape(r["place"])}</td><td>{temp}</td><td>{rain}</td><td>{wind}</td><td><span class="status {status_cls}">{escape(status)}</span> {escape(advice)}</td></tr>')
-            cards_mobile.append(f'<div class="hour-card"><div class="time">{r["time"]} · {r["km"]} km · <span class="status {status_cls}">{escape(status)}</span></div><div class="grid"><div>{escape(t["sector"])}: <b>{escape(r["place"])}</b></div><div>{escape(t["temp"])}: <b>{temp}</b></div><div>{escape(t["rain"])}: <b>{rain}</b></div><div>{escape(t["wind"])}: <b>{wind}</b></div></div><div class="advice">{escape(advice)}</div></div>')
+            wind = f'{fmt_num(r["wind"], " km/h")} / {fmt_num(r["wind_max"], " km/h")}'
+            wind_dir = escape(r["wind_dir"])
+            html.append(f'<tr><td><b>{r["time"]}</b></td><td>{r["km"]}</td><td>{escape(r["place"])}</td><td>{temp}</td><td>{rain}</td><td>{wind}</td><td>{wind_dir}</td><td><span class="status {status_cls}">{escape(status)}</span> {escape(advice)}</td></tr>')
+            cards_mobile.append(f'<div class="hour-card"><div class="time">{r["time"]} · {r["km"]} km · <span class="status {status_cls}">{escape(status)}</span></div><div class="grid"><div>{escape(t["sector"])}: <b>{escape(r["place"])}</b></div><div>{escape(t["temp"])}: <b>{temp}</b></div><div>{escape(t["rain"])}: <b>{rain}</b></div><div>{escape(t["wind"])}: <b>{wind}</b></div><div>{escape(t["wind_dir"])}: <b>{wind_dir}</b></div></div><div class="advice">{escape(advice)}</div></div>')
         html.append('</tbody></table></div>')
         cards_mobile.append('</div>')
         html.extend(cards_mobile)
@@ -350,9 +363,10 @@ def markdown(rows_by_duration, researched_at):
     text, _, _, _ = conclusion(rows_by_duration, "en")
     lines = ["# Delacau 200 BRM weather forecast", "", f"Last researched: {researched_at.strftime('%Y-%m-%d %H:%M')} Moldova time", "", text]
     for duration, rows in rows_by_duration.items():
-        lines += ["", f"## {duration} hour scenario", "", "| Time | km | Place | Temp | Rain | Wind |", "|---|---:|---|---:|---:|---:|"]
+        lines += ["", f"## {duration} hour scenario", "", "| Time | km | Place | Temp | Rain | Avg/max wind | Wind direction |", "|---|---:|---|---:|---:|---:|---|"]
         for r in rows:
-            lines.append(f"| {r['time']} | {r['km']} | {r['place']} | {fmt_num(r['temp'],'°C')} | {(r['rain'] or 0):.1f} mm | {fmt_num(r['wind'],' km/h')} |")
+            wind = f"{fmt_num(r['wind'],' km/h')} / {fmt_num(r['wind_max'],' km/h')}"
+            lines.append(f"| {r['time']} | {r['km']} | {r['place']} | {fmt_num(r['temp'],'°C')} | {(r['rain'] or 0):.1f} mm | {wind} | {r['wind_dir']} |")
     lines += ["", "## Sources checked"] + [f"- **{k}**: {v}" for k, v in PLATFORM_STATUS.items()]
     return "\n".join(lines) + "\n"
 
