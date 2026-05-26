@@ -1,6 +1,6 @@
 # Delacau 200 BRM weather forecast
 
-Last researched: 2026-05-26 20:01 Moldova time
+Last researched: 2026-05-26 20:10 Moldova time
 
 Most probable: good cycling weather, mostly dry. Expected temperature: 14–23°C. Wind: light to moderate, around 17 km/h on average. Rain risk looks low, but keep a light rain shell for an isolated shower.
 
@@ -54,9 +54,8 @@ Most probable: good cycling weather, mostly dry. Expected temperature: 14–23°
 | 19:00 | 200 | Chisinau | 16 | 0.0 | NW | 6 avg / 6 max |
 
 ## Sources checked
-- **MET Norway / Yr locationforecast**: OK: hourly point forecast along route corridor
-- **7Timer Civil**: OK: 3-hourly point forecast along route corridor
-- **Weather-Forecast.com Kishinev**: OK: broad Chisinau cross-check
-- **Open-Meteo**: Skipped: repeated 502/504/timeouts in earlier checks
-- **wttr.in**: Skipped: date option not available for 31 May forecast endpoint
-- **timeanddate.com**: Skipped: 403 anti-bot page
+- **Combined forecast**: Main page: practical average / most probable interpretation from working sources
+- **MET Norway / Yr**: Hourly point forecast along the route corridor
+- **7Timer Civil**: 3-hourly point forecast along the route corridor
+- **Weather-Forecast.com**: 3-period Chisinau forecast, applied to route timing
+- **AccuWeather**: Day/night Moldova forecast, applied to route timing

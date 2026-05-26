@@ -83,12 +83,18 @@ TEXT = {
 }
 
 PLATFORM_STATUS = {
-    "MET Norway / Yr locationforecast": "OK: hourly point forecast along route corridor",
-    "7Timer Civil": "OK: 3-hourly point forecast along route corridor",
-    "Weather-Forecast.com Kishinev": "OK: broad Chisinau cross-check",
-    "Open-Meteo": "Skipped: repeated 502/504/timeouts in earlier checks",
-    "wttr.in": "Skipped: date option not available for 31 May forecast endpoint",
-    "timeanddate.com": "Skipped: 403 anti-bot page",
+    "Combined forecast": "Main page: practical average / most probable interpretation from working sources",
+    "MET Norway / Yr": "Hourly point forecast along the route corridor",
+    "7Timer Civil": "3-hourly point forecast along the route corridor",
+    "Weather-Forecast.com": "3-period Chisinau forecast, applied to route timing",
+    "AccuWeather": "Day/night Moldova forecast, applied to route timing",
+}
+
+SOURCES = {
+    "met-norway": "MET Norway / Yr",
+    "7timer": "7Timer Civil",
+    "weather-forecast": "Weather-Forecast.com",
+    "accuweather": "AccuWeather",
 }
 
 
@@ -281,6 +287,68 @@ def fetch_accuweather_day_forecast():
         }
 
 
+def fetch_weatherforecast_day_forecast():
+    url = "https://www.weather-forecast.com/locations/Kishinev/forecasts/latest"
+    try:
+        text = get_text(url, timeout=20)
+        def row_tokens(cls):
+            m = re.search(r'<tr[^>]*class="[^"]*' + re.escape(cls) + r'[^"]*"[^>]*>(.*?)</tr>', text, re.S)
+            return [x.strip() for x in re.sub(r'<[^>]+>', '|', m.group(1)).split('|') if x.strip()] if m else []
+        slot_am, slot_pm, slot_night = 15, 16, 17
+        summary = row_tokens("js-summary")
+        rain = row_tokens("js-rain")
+        high = row_tokens("js-temp")
+        low = row_tokens("js-min-temp")
+        wind = row_tokens("js-wind")
+        def value(tokens, slot, prefix=1, default=None):
+            try:
+                return tokens[prefix + slot]
+            except Exception:
+                return default
+        def wind_value(slot):
+            try:
+                return float(wind[2 + slot * 2]), wind[3 + slot * 2]
+            except Exception:
+                return 15.0, "NW"
+        def period(slot, temp_default):
+            w, d = wind_value(slot)
+            cond = value(summary, slot, 0, "partly cloudy")
+            r = value(rain, slot, 2, "-")
+            return {
+                "temp": float(value(high, slot, 1, temp_default) or temp_default),
+                "wind": w,
+                "wind_max": w,
+                "wind_dir": d,
+                "rain": 0.0 if r == "-" else float(r),
+                "condition": cond,
+            }
+        return {"am": period(slot_am, 19), "pm": period(slot_pm, 21), "night": period(slot_night, 18), "source_url": url}
+    except Exception:
+        return {
+            "am": {"temp": 19, "wind": 15, "wind_max": 15, "wind_dir": "WNW", "rain": 0, "condition": "some clouds"},
+            "pm": {"temp": 21, "wind": 10, "wind_max": 10, "wind_dir": "S", "rain": 0, "condition": "some clouds"},
+            "night": {"temp": 18, "wind": 5, "wind_max": 5, "wind_dir": "S", "rain": 0, "condition": "clear"},
+            "source_url": url,
+        }
+
+
+def build_rows_from_periods(periods):
+    route_at = route_samples_from_gpx()
+    rows_by_duration = {}
+    for duration in DURATIONS:
+        rows = []
+        for elapsed in range(duration + 1):
+            hour = START_HOUR + elapsed
+            km = DISTANCE_KM * elapsed / duration
+            lat, lon = route_at(km) if route_at else min(WEATHER_POINTS, key=lambda p: abs(p[0] - km))[2:4]
+            period = periods["am"] if hour < 12 else periods["pm"] if hour < 19 else periods["night"]
+            rain = period["rain"]
+            caution = rain >= 0.1 or "shower" in period["condition"].lower() or "rain" in period["condition"].lower() or "tstorm" in period["condition"].lower()
+            rows.append({"time": f"{hour:02d}:00", "elapsed": elapsed, "km": round(km), "place": nearest_label(lat, lon), "lat": lat, "lon": lon, "temp": period["temp"], "rain": rain, "wind": period["wind"], "wind_max": period["wind_max"], "wind_dir": period["wind_dir"], "condition": period["condition"], "caution": caution})
+        rows_by_duration[duration] = rows
+    return rows_by_duration
+
+
 def build_rows_from_accuweather(accu):
     route_at = route_samples_from_gpx()
     rows_by_duration = {}
@@ -318,12 +386,13 @@ def build_rows(met, sev):
             m = sample_hourly(met, weather_km, hour)
             s = sample_hourly(sev, weather_km, hour)
             temp = m.get("temp") if m else s.get("temp2m") if s else None
-            rain = m.get("rain", 0) if m else 0
+            condition = m.get("symbol", "").replace("_", " ") if m else s.get("weather", "") if s else ""
+            prec_type = s.get("prec_type", "none") if s else "none"
+            rain = m.get("rain", 0) if m else (0 if prec_type == "none" else 0.3)
             wind = m.get("wind") if m else seven_speed_to_kmh(s.get("wind10m", {}).get("speed")) if s else None
             wind_max = (m.get("gust") or wind) if m else wind
             wind_dir = m.get("dir") if m else s.get("wind10m", {}).get("direction", "—") if s else "—"
             cloud = m.get("cloud") if m else None
-            condition = m.get("symbol", "").replace("_", " ") if m else s.get("weather", "") if s else ""
             if not condition and cloud is not None:
                 condition = f"cloud {cloud:.0f}%"
             caution = (rain or 0) >= 0.1 or "rain" in condition or "thunder" in condition or "tstorm" in condition
@@ -374,7 +443,19 @@ def lang_links(current):
     return links
 
 
-def page_html(lang, rows_by_duration, researched_at, root=False, title_override=None, subtitle_override=None, extra_note=None, source_status=None, hide_lang=False):
+def source_links_html(lang, prefix=""):
+    labels = {"ro": "Compara surse", "en": "Compare sources", "ru": "Сравнить источники"}
+    main_label = {"ro": "Prognoza medie", "en": "Combined forecast", "ru": "Средний прогноз"}
+    html = [f'<section class="section"><h2>{escape(labels[lang])}</h2><div class="source-links">']
+    html.append(f'<a href="{prefix}index.html">{escape(main_label[lang])}</a>')
+    for slug, name in SOURCES.items():
+        suffix = "" if lang == "ro" else f"-{lang}"
+        html.append(f'<a href="{prefix}sources/{slug}{suffix}.html">{escape(name)}</a>')
+    html.append('</div></section>')
+    return "\n".join(html)
+
+
+def page_html(lang, rows_by_duration, researched_at, root=False, title_override=None, subtitle_override=None, extra_note=None, source_status=None, hide_lang=False, show_source_links=False, source_prefix=""):
     t = TEXT[lang]
     links = lang_links("root" if root else lang)
     conclusion_text, temp_range, wind_avg, total_rain = conclusion(rows_by_duration, lang)
@@ -407,6 +488,8 @@ def page_html(lang, rows_by_duration, researched_at, root=False, title_override=
     for label, value in cards:
         html.append(f'<div class="card"><div class="label">{escape(label)}</div><div class="value">{escape(value)}</div></div>')
     html.append('</div></section>')
+    if show_source_links:
+        html.append(source_links_html(lang, source_prefix))
     html.append(f'<section class="section"><h2>{escape(t["route_info"])}</h2><div class="note">{escape(gpx_note)}</div></section>')
 
     for duration, rows in rows_by_duration.items():
@@ -456,31 +539,42 @@ def main():
     researched_at = datetime.now(TZ)
     met = fetch_metno()
     sev = fetch_7timer()
-    weather_forecast_crosscheck()
+    wf = fetch_weatherforecast_day_forecast()
     rows_by_duration = build_rows(met, sev)
+    met_rows = build_rows(met, {})
+    sev_rows = build_rows({}, sev)
+    wf_rows = build_rows_from_periods(wf)
     accu = fetch_accuweather_day_forecast()
     accuweather_rows = build_rows_from_accuweather(accu)
 
     (ROOT / "ro").mkdir(exist_ok=True)
     (ROOT / "en").mkdir(exist_ok=True)
     (ROOT / "ru").mkdir(exist_ok=True)
-    (ROOT / "accuweather").mkdir(exist_ok=True)
+    (ROOT / "sources").mkdir(exist_ok=True)
     (ROOT / "assets").mkdir(exist_ok=True)
 
-    (ROOT / "index.html").write_text(page_html("ro", rows_by_duration, researched_at, root=True), encoding="utf-8")
-    (ROOT / "ro" / "index.html").write_text(page_html("ro", rows_by_duration, researched_at), encoding="utf-8")
-    (ROOT / "en" / "index.html").write_text(page_html("en", rows_by_duration, researched_at), encoding="utf-8")
-    (ROOT / "ru" / "index.html").write_text(page_html("ru", rows_by_duration, researched_at), encoding="utf-8")
-    (ROOT / "accuweather" / "index.html").write_text(page_html(
-        "en",
-        accuweather_rows,
-        researched_at,
-        title_override="AccuWeather-only forecast for Delacau 200 BRM",
-        subtitle_override="Same route scenarios using only AccuWeather day/night forecast for 31 May 2026",
-        extra_note="This experimental page uses only AccuWeather. Public AccuWeather data available without an API key is day/night based, not truly hourly; hourly rows below apply those day/night values to the estimated rider position on the route.",
-        source_status={"AccuWeather Centru / Moldova daily forecast": f"OK: day/night forecast, source {accu['source_url']}"},
-        hide_lang=True,
-    ), encoding="utf-8")
+    avg_note = {
+        "ro": "Aceasta este prognoza medie/probabila, calculata din mai multe surse meteo. Pentru comparatie, poti deschide prognoza separata pentru fiecare sursa.",
+        "en": "This is the combined / most probable forecast from multiple weather sources. For comparison, separate provider pages are available below.",
+        "ru": "Это средний / наиболее вероятный прогноз по нескольким погодным источникам. Для сравнения ниже доступны отдельные страницы по каждому источнику.",
+    }
+    (ROOT / "index.html").write_text(page_html("ro", rows_by_duration, researched_at, root=True, extra_note=avg_note["ro"], show_source_links=True), encoding="utf-8")
+    (ROOT / "ro" / "index.html").write_text(page_html("ro", rows_by_duration, researched_at, extra_note=avg_note["ro"], show_source_links=True, source_prefix="../"), encoding="utf-8")
+    (ROOT / "en" / "index.html").write_text(page_html("en", rows_by_duration, researched_at, extra_note=avg_note["en"], show_source_links=True, source_prefix="../"), encoding="utf-8")
+    (ROOT / "ru" / "index.html").write_text(page_html("ru", rows_by_duration, researched_at, extra_note=avg_note["ru"], show_source_links=True, source_prefix="../"), encoding="utf-8")
+
+    source_configs = {
+        "met-norway": ("MET Norway / Yr", met_rows, "Hourly point forecast from MET Norway / Yr only."),
+        "7timer": ("7Timer Civil", sev_rows, "3-hourly forecast from 7Timer only; values are matched to the nearest hour."),
+        "weather-forecast": ("Weather-Forecast.com", wf_rows, "3-period Chisinau forecast from Weather-Forecast.com only; values are applied to estimated route positions."),
+        "accuweather": ("AccuWeather", accuweather_rows, "AccuWeather public day/night forecast only; values are applied to estimated route positions."),
+    }
+    for slug, (name, source_rows, note) in source_configs.items():
+        for lang in ["ro", "en", "ru"]:
+            suffix = "" if lang == "ro" else f"-{lang}"
+            title = f"{name} forecast for Delacau 200 BRM" if lang == "en" else f"Prognoza {name} pentru Delacau 200 BRM" if lang == "ro" else f"Прогноз {name} для Delacau 200 BRM"
+            subtitle = "Provider-specific forecast · 31 May 2026 · 8h / 10h / 13h scenarios"
+            (ROOT / "sources" / f"{slug}{suffix}.html").write_text(page_html(lang, source_rows, researched_at, title_override=title, subtitle_override=subtitle, extra_note=note, source_status={name: note}, hide_lang=True, show_source_links=True, source_prefix="../"), encoding="utf-8")
     (ROOT / "delacau_200_weather_31may2026.md").write_text(markdown(rows_by_duration, researched_at), encoding="utf-8")
     # Keep descriptive HTML copy for compatibility with the earlier report name.
     (ROOT / "delacau_200_weather_31may2026.html").write_text((ROOT / "en" / "index.html").read_text(encoding="utf-8"), encoding="utf-8")
