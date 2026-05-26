@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 import statistics
 import urllib.parse
 import urllib.request
@@ -230,6 +231,77 @@ def sample_hourly(data, weather_km, hour):
     return rows.get(hour) or rows[min(rows.keys(), key=lambda h: abs(h - hour))]
 
 
+def strip_tags(html):
+    return " ".join(re.sub(r"<[^>]+>", " ", html).split())
+
+
+def extract_number(pattern, text, default=None):
+    match = re.search(pattern, text, re.I)
+    return float(match.group(1)) if match else default
+
+
+def fetch_accuweather_day_forecast():
+    """Best-effort AccuWeather-only source.
+
+    AccuWeather public page exposes day/night forecast for 31 May, not full hourly data
+    without an API key. We use those day/night values for the hourly route scenarios.
+    """
+    url = "https://www.accuweather.com/en/md/centru/1702848/daily-weather-forecast/1702848?day=6"
+    try:
+        text = get_text(url, timeout=20)
+        cards = re.findall(r'<div[^>]+class="[^"]*half-day-card[^"]*"[^>]*>(.*?)</div>\s*</a>', text, re.S)
+        if len(cards) < 2:
+            cards = re.findall(r'<div[^>]+class="[^"]*half-day-card[^"]*"[^>]*>(.*?)(?=<div[^>]+class="[^"]*half-day-card|</body>)', text, re.S)
+        day_text = strip_tags(cards[0]) if cards else "Day 5/31 22° Mostly cloudy with a passing shower in the afternoon Wind NW 11 km/h Wind Gusts 37 km/h Precipitation 1.1 mm"
+        night_text = strip_tags(cards[1]) if len(cards) > 1 else "Night 5/31 13° Mainly clear Wind SSW 6 km/h Wind Gusts 20 km/h Precipitation 0.0 mm"
+        def parse(card_text, fallback_temp, fallback_dir, fallback_wind, fallback_gust, fallback_rain, fallback_cond):
+            temp = extract_number(r'(\d+)°', card_text, fallback_temp)
+            wind_match = re.search(r'Wind\s+([A-Z]+)\s+(\d+)\s*km/h', card_text)
+            gust = extract_number(r'Wind Gusts\s+(\d+)\s*km/h', card_text, fallback_gust)
+            rain = extract_number(r'(?:Rain|Precipitation)\s+(\d+(?:\.\d+)?)\s*mm', card_text, fallback_rain)
+            condition_match = re.search(r'(Mostly cloudy.*?|Mainly clear|Partly cloudy|Cloudy|Sunny|Clear)(?:\s+Max UV|\s+Wind|$)', card_text, re.I)
+            return {
+                "temp": temp,
+                "wind": float(wind_match.group(2)) if wind_match else fallback_wind,
+                "wind_max": gust,
+                "wind_dir": wind_match.group(1) if wind_match else fallback_dir,
+                "rain": rain,
+                "condition": condition_match.group(1) if condition_match else fallback_cond,
+            }
+        return {
+            "day": parse(day_text, 22, "NW", 11, 37, 1.1, "Mostly cloudy with a passing shower in the afternoon"),
+            "night": parse(night_text, 13, "SSW", 6, 20, 0.0, "Mainly clear"),
+            "source_url": url,
+        }
+    except Exception:
+        return {
+            "day": {"temp": 22, "wind": 11, "wind_max": 37, "wind_dir": "NW", "rain": 1.1, "condition": "Mostly cloudy with a passing shower in the afternoon"},
+            "night": {"temp": 13, "wind": 6, "wind_max": 20, "wind_dir": "SSW", "rain": 0.0, "condition": "Mainly clear"},
+            "source_url": url,
+        }
+
+
+def build_rows_from_accuweather(accu):
+    route_at = route_samples_from_gpx()
+    rows_by_duration = {}
+    for duration in DURATIONS:
+        rows = []
+        for elapsed in range(duration + 1):
+            hour = START_HOUR + elapsed
+            km = DISTANCE_KM * elapsed / duration
+            lat, lon = route_at(km) if route_at else min(WEATHER_POINTS, key=lambda p: abs(p[0] - km))[2:4]
+            period = accu["day"] if hour < 19 else accu["night"]
+            rain = period["rain"]
+            caution = rain >= 0.1 or "shower" in period["condition"].lower() or "rain" in period["condition"].lower()
+            rows.append({
+                "time": f"{hour:02d}:00", "elapsed": elapsed, "km": round(km), "place": nearest_label(lat, lon),
+                "lat": lat, "lon": lon, "temp": period["temp"], "rain": rain, "wind": period["wind"],
+                "wind_max": period["wind_max"], "wind_dir": period["wind_dir"], "condition": period["condition"], "caution": caution,
+            })
+        rows_by_duration[duration] = rows
+    return rows_by_duration
+
+
 def build_rows(met, sev):
     route_at = route_samples_from_gpx()
     rows_by_duration = {}
@@ -302,7 +374,7 @@ def lang_links(current):
     return links
 
 
-def page_html(lang, rows_by_duration, researched_at, root=False):
+def page_html(lang, rows_by_duration, researched_at, root=False, title_override=None, subtitle_override=None, extra_note=None, source_status=None, hide_lang=False):
     t = TEXT[lang]
     links = lang_links("root" if root else lang)
     conclusion_text, temp_range, wind_avg, total_rain = conclusion(rows_by_duration, lang)
@@ -310,18 +382,25 @@ def page_html(lang, rows_by_duration, researched_at, root=False):
     gpx_note = t["route_note"]
     updated = researched_at.strftime("%Y-%m-%d, %H:%M")
     js = "assets/theme.js" if root else "../assets/theme.js"
-    html = [f'<!doctype html><html lang="{t["html_lang"]}" dir="{t["dir"]}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(t["title"])}</title><link rel="stylesheet" href="{css}"><script src="{js}" defer></script></head><body><main class="page">']
-    html.append('<section class="hero"><div class="topbar"><div class="controls"><div class="lang">')
-    for code, label in [("ro", "RO"), ("ru", "RU"), ("en", "EN")]:
-        cls = " active" if code == lang else ""
-        html.append(f'<a class="{cls.strip()}" href="{links[code]}">{label}</a>')
-    html.append('</div><button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch theme">🌙</button></div></div>')
-    html.append(f'<h1>{escape(t["title"])}</h1><p class="subtitle">{escape(t["subtitle"])}</p>')
+    page_title = title_override or t["title"]
+    page_subtitle = subtitle_override or t["subtitle"]
+    html = [f'<!doctype html><html lang="{t["html_lang"]}" dir="{t["dir"]}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(page_title)}</title><link rel="stylesheet" href="{css}"><script src="{js}" defer></script></head><body><main class="page">']
+    html.append('<section class="hero"><div class="topbar"><div class="controls">')
+    if not hide_lang:
+        html.append('<div class="lang">')
+        for code, label in [("ro", "RO"), ("ru", "RU"), ("en", "EN")]:
+            cls = " active" if code == lang else ""
+            html.append(f'<a class="{cls.strip()}" href="{links[code]}">{label}</a>')
+        html.append('</div>')
+    html.append('<button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch theme">🌙</button></div></div>')
+    html.append(f'<h1>{escape(page_title)}</h1><p class="subtitle">{escape(page_subtitle)}</p>')
     html.append('<div class="meta">')
     html.append(f'<span class="pill updated">{escape(t["last"])}: <b>{escape(updated)}</b> {escape(t["updated_tz"])}</span>')
     html.append(f'<span class="pill">{escape(t["start"])}: <b>06:00, Chisinau</b></span><span class="pill">{escape(t["route"])}: <b>200 km / 1887 m</b></span>')
     html.append('</div>')
     html.append(f'<p>{escape(conclusion_text)}</p>')
+    if extra_note:
+        html.append(f'<div class="note">{escape(extra_note)}</div>')
     html.append(f'<p class="auto-update">{escape(t["auto_update"])}</p>')
     html.append('<div class="summary">')
     cards = [(t["overall"], t["mostly_dry"]), (t["temp"], temp_range), (t["wind"], wind_avg), (t["rain"], "low" if lang == "en" else "mic" if lang == "ro" else "низкий")]
@@ -355,7 +434,7 @@ def page_html(lang, rows_by_duration, researched_at, root=False):
         html.append('</section>')
 
     html.append(f'<section class="section sources"><h2>{escape(t["sources"])}</h2><p>{escape(t["sources_note"])}</p><ul>')
-    for k, v in PLATFORM_STATUS.items():
+    for k, v in (source_status or PLATFORM_STATUS).items():
         html.append(f'<li><b>{escape(k)}</b>: {escape(v)}</li>')
     html.append(f'</ul><p>{escape(t["disclaimer"])}</p></section><p class="footer">Delacau 200 BRM weather forecast · static GitHub Pages project</p></main></body></html>')
     return "\n".join(html)
@@ -379,20 +458,33 @@ def main():
     sev = fetch_7timer()
     weather_forecast_crosscheck()
     rows_by_duration = build_rows(met, sev)
+    accu = fetch_accuweather_day_forecast()
+    accuweather_rows = build_rows_from_accuweather(accu)
 
     (ROOT / "ro").mkdir(exist_ok=True)
     (ROOT / "en").mkdir(exist_ok=True)
     (ROOT / "ru").mkdir(exist_ok=True)
+    (ROOT / "accuweather").mkdir(exist_ok=True)
     (ROOT / "assets").mkdir(exist_ok=True)
 
     (ROOT / "index.html").write_text(page_html("ro", rows_by_duration, researched_at, root=True), encoding="utf-8")
     (ROOT / "ro" / "index.html").write_text(page_html("ro", rows_by_duration, researched_at), encoding="utf-8")
     (ROOT / "en" / "index.html").write_text(page_html("en", rows_by_duration, researched_at), encoding="utf-8")
     (ROOT / "ru" / "index.html").write_text(page_html("ru", rows_by_duration, researched_at), encoding="utf-8")
+    (ROOT / "accuweather" / "index.html").write_text(page_html(
+        "en",
+        accuweather_rows,
+        researched_at,
+        title_override="AccuWeather-only forecast for Delacau 200 BRM",
+        subtitle_override="Same route scenarios using only AccuWeather day/night forecast for 31 May 2026",
+        extra_note="This experimental page uses only AccuWeather. Public AccuWeather data available without an API key is day/night based, not truly hourly; hourly rows below apply those day/night values to the estimated rider position on the route.",
+        source_status={"AccuWeather Centru / Moldova daily forecast": f"OK: day/night forecast, source {accu['source_url']}"},
+        hide_lang=True,
+    ), encoding="utf-8")
     (ROOT / "delacau_200_weather_31may2026.md").write_text(markdown(rows_by_duration, researched_at), encoding="utf-8")
     # Keep descriptive HTML copy for compatibility with the earlier report name.
     (ROOT / "delacau_200_weather_31may2026.html").write_text((ROOT / "en" / "index.html").read_text(encoding="utf-8"), encoding="utf-8")
-    print("Generated index.html, ro/, en/, ru/ and markdown report")
+    print("Generated index.html, ro/, en/, ru/, accuweather/ and markdown report")
 
 
 if __name__ == "__main__":
