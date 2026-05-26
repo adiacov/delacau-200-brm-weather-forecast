@@ -297,12 +297,13 @@ def page_html(lang, rows_by_duration, researched_at, root=False):
     css = "assets/style.css" if root else "../assets/style.css"
     gpx_note = t["route_note"]
     updated = researched_at.strftime("%Y-%m-%d, %H:%M")
-    html = [f'<!doctype html><html lang="{t["html_lang"]}" dir="{t["dir"]}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(t["title"])}</title><link rel="stylesheet" href="{css}"></head><body><main class="page">']
-    html.append('<section class="hero"><div class="topbar"><div class="lang">')
+    js = "assets/theme.js" if root else "../assets/theme.js"
+    html = [f'<!doctype html><html lang="{t["html_lang"]}" dir="{t["dir"]}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(t["title"])}</title><link rel="stylesheet" href="{css}"><script src="{js}" defer></script></head><body><main class="page">']
+    html.append('<section class="hero"><div class="topbar"><div class="controls"><div class="lang">')
     for code, label in [("ro", "RO"), ("ru", "RU"), ("en", "EN")]:
         cls = " active" if code == lang else ""
         html.append(f'<a class="{cls.strip()}" href="{links[code]}">{label}</a>')
-    html.append('</div></div>')
+    html.append('</div><button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch theme">🌙</button></div></div>')
     html.append(f'<h1>{escape(t["title"])}</h1><p class="subtitle">{escape(t["subtitle"])}</p>')
     html.append('<div class="meta">')
     html.append(f'<span class="pill updated">{escape(t["last"])}: <b>{escape(updated)}</b> {escape(t["updated_tz"])}</span>')
