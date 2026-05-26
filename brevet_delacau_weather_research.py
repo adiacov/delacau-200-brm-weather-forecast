@@ -316,7 +316,7 @@ def fetch_weatherforecast_day_forecast():
             return {
                 "temp": float(value(high, slot, 1, temp_default) or temp_default),
                 "wind": w,
-                "wind_max": w,
+                "wind_max": None,
                 "wind_dir": d,
                 "rain": 0.0 if r == "-" else float(r),
                 "condition": cond,
@@ -324,9 +324,9 @@ def fetch_weatherforecast_day_forecast():
         return {"am": period(slot_am, 19), "pm": period(slot_pm, 21), "night": period(slot_night, 18), "source_url": url}
     except Exception:
         return {
-            "am": {"temp": 19, "wind": 15, "wind_max": 15, "wind_dir": "WNW", "rain": 0, "condition": "some clouds"},
-            "pm": {"temp": 21, "wind": 10, "wind_max": 10, "wind_dir": "S", "rain": 0, "condition": "some clouds"},
-            "night": {"temp": 18, "wind": 5, "wind_max": 5, "wind_dir": "S", "rain": 0, "condition": "clear"},
+            "am": {"temp": 19, "wind": 15, "wind_max": None, "wind_dir": "WNW", "rain": 0, "condition": "some clouds"},
+            "pm": {"temp": 21, "wind": 10, "wind_max": None, "wind_dir": "S", "rain": 0, "condition": "some clouds"},
+            "night": {"temp": 18, "wind": 5, "wind_max": None, "wind_dir": "S", "rain": 0, "condition": "clear"},
             "source_url": url,
         }
 
@@ -389,7 +389,7 @@ def build_rows(met, sev):
             prec_type = s.get("prec_type", "none") if s else "none"
             rain = m.get("rain", 0) if m else (0 if prec_type == "none" else 0.3)
             wind = m.get("wind") if m else seven_speed_to_kmh(s.get("wind10m", {}).get("speed")) if s else None
-            wind_max = (m.get("gust") or wind) if m else wind
+            wind_max = m.get("gust") if m else None
             wind_dir = m.get("dir") if m else s.get("wind10m", {}).get("direction", "—") if s else "—"
             cloud = m.get("cloud") if m else None
             if not condition and cloud is not None:
