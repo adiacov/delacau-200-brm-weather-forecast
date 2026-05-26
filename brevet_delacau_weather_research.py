@@ -443,21 +443,23 @@ def lang_links(current):
     return links
 
 
-def source_links_html(lang, prefix=""):
+def source_links_html(lang, prefix="", active="combined"):
     labels = {"ro": "Compara surse", "en": "Compare sources", "ru": "Сравнить источники"}
     main_label = {"ro": "Prognoza medie", "en": "Combined forecast", "ru": "Средний прогноз"}
     html = [f'<section class="section"><h2>{escape(labels[lang])}</h2><div class="source-links">']
-    html.append(f'<a href="{prefix}index.html">{escape(main_label[lang])}</a>')
+    combined_cls = ' class="active"' if active == "combined" else ""
+    html.append(f'<a{combined_cls} href="{prefix}index.html">{escape(main_label[lang])}</a>')
     for slug, name in SOURCES.items():
         suffix = "" if lang == "ro" else f"-{lang}"
-        html.append(f'<a href="{prefix}sources/{slug}{suffix}.html">{escape(name)}</a>')
+        cls = ' class="active"' if active == slug else ""
+        html.append(f'<a{cls} href="{prefix}sources/{slug}{suffix}.html">{escape(name)}</a>')
     html.append('</div></section>')
     return "\n".join(html)
 
 
-def page_html(lang, rows_by_duration, researched_at, root=False, title_override=None, subtitle_override=None, extra_note=None, source_status=None, hide_lang=False, show_source_links=False, source_prefix=""):
+def page_html(lang, rows_by_duration, researched_at, root=False, title_override=None, subtitle_override=None, extra_note=None, source_status=None, hide_lang=False, show_source_links=False, source_prefix="", active_source="combined", lang_links_override=None):
     t = TEXT[lang]
-    links = lang_links("root" if root else lang)
+    links = lang_links_override or lang_links("root" if root else lang)
     conclusion_text, temp_range, wind_avg, total_rain = conclusion(rows_by_duration, lang)
     css = "assets/style.css" if root else "../assets/style.css"
     gpx_note = t["route_note"]
@@ -489,7 +491,7 @@ def page_html(lang, rows_by_duration, researched_at, root=False, title_override=
         html.append(f'<div class="card"><div class="label">{escape(label)}</div><div class="value">{escape(value)}</div></div>')
     html.append('</div></section>')
     if show_source_links:
-        html.append(source_links_html(lang, source_prefix))
+        html.append(source_links_html(lang, source_prefix, active_source))
     html.append(f'<section class="section"><h2>{escape(t["route_info"])}</h2><div class="note">{escape(gpx_note)}</div></section>')
 
     for duration, rows in rows_by_duration.items():
@@ -574,7 +576,8 @@ def main():
             suffix = "" if lang == "ro" else f"-{lang}"
             title = f"{name} forecast for Delacau 200 BRM" if lang == "en" else f"Prognoza {name} pentru Delacau 200 BRM" if lang == "ro" else f"Прогноз {name} для Delacau 200 BRM"
             subtitle = "Provider-specific forecast · 31 May 2026 · 8h / 10h / 13h scenarios"
-            (ROOT / "sources" / f"{slug}{suffix}.html").write_text(page_html(lang, source_rows, researched_at, title_override=title, subtitle_override=subtitle, extra_note=note, source_status={name: note}, hide_lang=True, show_source_links=True, source_prefix="../"), encoding="utf-8")
+            lang_override = {"ro": f"{slug}.html", "en": f"{slug}-en.html", "ru": f"{slug}-ru.html"}
+            (ROOT / "sources" / f"{slug}{suffix}.html").write_text(page_html(lang, source_rows, researched_at, title_override=title, subtitle_override=subtitle, extra_note=note, source_status={name: note}, show_source_links=True, source_prefix="../", active_source=slug, lang_links_override=lang_override), encoding="utf-8")
     (ROOT / "delacau_200_weather_31may2026.md").write_text(markdown(rows_by_duration, researched_at), encoding="utf-8")
     # Keep descriptive HTML copy for compatibility with the earlier report name.
     (ROOT / "delacau_200_weather_31may2026.html").write_text((ROOT / "en" / "index.html").read_text(encoding="utf-8"), encoding="utf-8")
