@@ -41,7 +41,7 @@ TEXT = {
         "lang_name": "Romana", "html_lang": "ro", "dir": "ltr", "active": "RO",
         "title": "Vremea pe traseu pentru Delacau 200 BRM",
         "subtitle": "Prognoza ora cu ora pentru 31 mai 2026 · Start: 06:00 · Scenarii: 8h / 10h / 13h",
-        "last": "Ultima cercetare", "forecast_for": "Prognoza pentru", "start": "Start", "route": "Ruta",
+        "last": "Ultima cercetare", "forecast_for": "Prognoza pentru", "start": "Start", "route": "Ruta", "auto_update": "Pagina este planificata sa se actualizeze zilnic in jurul orei 06:00, ora Moldovei.",
         "summary": "Concluzie pe scurt", "overall": "General", "temp": "Temperatura", "wind": "Vant", "rain": "Ploaie",
         "route_info": "Cum se citeste prognoza", "route_note": "Alege scenariul cel mai apropiat de timpul tau estimat de finish: 8h, 10h sau 13h. Pentru fiecare ora vezi kilometrul aproximativ si vremea probabila in acea zona. Daca ritmul tau difera, foloseste kilometrul aproximativ ca reper.",
         "scenario": "Scenariu", "finish": "finisare in", "time": "Ora", "km": "Km aprox.", "sector": "Zona traseului", "weather": "Vreme", "advice": "Recomandare",
@@ -55,7 +55,7 @@ TEXT = {
         "lang_name": "English", "html_lang": "en", "dir": "ltr", "active": "EN",
         "title": "Weather on the route for Delacau 200 BRM",
         "subtitle": "Hour-by-hour forecast for 31 May 2026 · Start: 06:00 · Scenarios: 8h / 10h / 13h",
-        "last": "Last researched", "forecast_for": "Forecast for", "start": "Start", "route": "Route",
+        "last": "Last researched", "forecast_for": "Forecast for", "start": "Start", "route": "Route", "auto_update": "This page is scheduled to update daily around 06:00 Moldova time.",
         "summary": "Short conclusion", "overall": "Overall", "temp": "Temperature", "wind": "Wind", "rain": "Rain",
         "route_info": "How to read this forecast", "route_note": "Choose the scenario closest to your estimated finish time: 8h, 10h or 13h. For each hour you see the approximate kilometer and the likely weather in that area. If your pace is different, use the approximate kilometer as your reference.",
         "scenario": "Scenario", "finish": "finish in", "time": "Time", "km": "Approx km", "sector": "Route area", "weather": "Weather", "advice": "Advice",
@@ -69,7 +69,7 @@ TEXT = {
         "lang_name": "Русский", "html_lang": "ru", "dir": "ltr", "active": "RU",
         "title": "Погода на маршруте Delacau 200 BRM",
         "subtitle": "Почасовой прогноз на 31 мая 2026 · Старт: 06:00 · Сценарии: 8ч / 10ч / 13ч",
-        "last": "Последнее обновление", "forecast_for": "Прогноз на", "start": "Старт", "route": "Маршрут",
+        "last": "Последнее обновление", "forecast_for": "Прогноз на", "start": "Старт", "route": "Маршрут", "auto_update": "Страница запланирована к ежедневному обновлению около 06:00 по времени Молдовы.",
         "summary": "Краткий вывод", "overall": "В целом", "temp": "Температура", "wind": "Ветер", "rain": "Дождь",
         "route_info": "Как читать этот прогноз", "route_note": "Выберите сценарий, который ближе всего к вашему ожидаемому времени финиша: 8ч, 10ч или 13ч. Для каждого часа указан примерный километр и ожидаемая погода в этой зоне. Если ваш темп отличается, ориентируйтесь по примерному километру.",
         "scenario": "Сценарий", "finish": "финиш за", "time": "Время", "km": "Км прибл.", "sector": "Участок маршрута", "weather": "Погода", "advice": "Совет",
@@ -310,6 +310,7 @@ def page_html(lang, rows_by_duration, researched_at, root=False):
     html.append(f'<span class="pill">{escape(t["start"])}: <b>06:00, Chisinau</b></span><span class="pill">{escape(t["route"])}: <b>200 km / 1887 m</b></span>')
     html.append('</div>')
     html.append(f'<p>{escape(conclusion_text)}</p>')
+    html.append(f'<p class="auto-update">{escape(t["auto_update"])}</p>')
     html.append('<div class="summary">')
     cards = [(t["overall"], t["mostly_dry"]), (t["temp"], temp_range), (t["wind"], wind_avg), (t["rain"], "low" if lang == "en" else "mic" if lang == "ro" else "низкий")]
     for label, value in cards:
