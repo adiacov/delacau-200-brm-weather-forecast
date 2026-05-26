@@ -17,8 +17,25 @@ Supporting files:
 
 This is a static HTML report generated from several weather sources with short request timeouts. The technical source list is intentionally placed at the bottom of the page; the top of the page is meant for normal riders.
 
+## GitHub Pages
+
+This project is ready to publish with GitHub Pages.
+
+Recommended settings in GitHub:
+
+1. Repository **Settings**
+2. **Pages**
+3. Source: **Deploy from a branch**
+4. Branch: **main**
+5. Folder: **/ (root)**
+6. Save
+
+After GitHub builds the page, the public URL should be:
+
+`https://adiacov.github.io/delacau-200-brm-weather-forecast/`
+
 ## Possible next steps
 
-- Use the GPX directly to sample weather exactly along the route instead of approximate control/corridor points.
-- Add an interactive map.
-- Publish as GitHub Pages using `index.html`.
+- Review the Romanian, Russian and English text.
+- Update the forecast daily closer to the event.
+- Optionally add an interactive route map later.
