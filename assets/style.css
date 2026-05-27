@@ -94,6 +94,8 @@ body{margin:0;background:radial-gradient(circle at 18% 0,var(--bg-soft),transpar
 .theme-toggle{cursor:pointer;min-width:42px}
 .lang a.active{background:var(--accent);color:#06201d;border-color:var(--accent);font-weight:800;box-shadow:0 0 0 4px var(--accent-ring)}
 :root:not([data-theme="dark"]) .lang a.active{color:#fff;background:var(--accent-strong);border-color:var(--accent-strong)}
+:root[data-theme="dark"] .lang a.active{background:var(--accent);border-color:var(--accent);color:#061815;text-shadow:none}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .lang a.active{background:var(--accent);border-color:var(--accent);color:#061815;text-shadow:none}}
 h1{font-size:clamp(30px,4.7vw,48px);line-height:1.04;margin:20px 0 8px;letter-spacing:-.045em;max-width:900px}
 .subtitle{font-size:clamp(15px,2.1vw,18px);color:var(--muted);margin:0;max-width:850px}
 .meta{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0 16px}
