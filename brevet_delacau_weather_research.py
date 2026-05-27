@@ -481,7 +481,7 @@ def lang_links(current):
 
 def source_links_html(lang, prefix="", active="accuweather"):
     labels = {"ro": "Alege sursa meteo", "en": "Choose weather source", "ru": "Выберите источник погоды"}
-    html = [f'<section class="section"><h2>{escape(labels[lang])}</h2><div class="source-links">']
+    html = [f'<section class="section source-section"><h2>{escape(labels[lang])}</h2><div class="source-links">']
     for slug, name in SOURCES.items():
         suffix = "" if lang == "ro" else f"-{lang}"
         cls = ' class="active"' if active == slug else ""
@@ -515,8 +515,6 @@ def page_html(lang, rows_by_duration, researched_at, root=False, title_override=
     html.append(f'<span class="pill">{escape(t["start"])}: <b>06:00, Chisinau</b></span><span class="pill">{escape(t["route"])}: <b>200 km / 1887 m</b></span>')
     html.append('</div>')
     html.append(f'<p>{escape(conclusion_text)}</p>')
-    if extra_note:
-        html.append(f'<div class="note">{escape(extra_note)}</div>')
     html.append(f'<p class="auto-update">{escape(t["auto_update"])}</p>')
     html.append('<div class="summary">')
     cards = [(t["overall"], t["mostly_dry"]), (t["temp"], temp_range), (t["wind"], wind_avg), (t["rain"], "low" if lang == "en" else "mic" if lang == "ro" else "низкий")]
