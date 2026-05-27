@@ -35,12 +35,17 @@ Public page:
 - `brevet_delacau_weather_research.py` — generator script
 - `.github/workflows/update-forecast.yml` — daily automatic update around 06:00 Moldova time
 - `ANNOUNCEMENT.md` — Telegram announcement texts
+- `LICENSE` — MIT license, copyright Alexandru Diacov
 - `PROJECT_INSTRUCTIONS.md` — maintenance/update instructions
 - `ASSISTANT_CONTEXT.md` — quick context for future assistant sessions
 
 ## Design goal
 
-This is for non-technical riders. The visible page should be simple, practical and easy to read on a phone. Technical details and weather-source notes belong at the bottom only.
+This is for non-technical riders. The visible page should be simple, practical and easy to read on a phone. The header uses generic weather-forecast wording, shows route facts as separate pills, and groups the automatic update schedule with the forecast update timestamp. Technical details and weather-source notes belong at the bottom only.
+
+## Generated pages
+
+The HTML pages are generated output. For layout/content generation, update `brevet_delacau_weather_research.py` and regenerate the pages. For visual styling, update `assets/style.css`. For light/dark behavior, update `assets/theme.js`.
 
 ## Updating the forecast
 

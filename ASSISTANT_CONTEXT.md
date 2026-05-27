@@ -28,7 +28,7 @@ Audience: non-technical cyclists. The page must be practical, mobile-friendly, a
 
 ## Current structure
 
-Main/default pages use **AccuWeather**:
+Main/default pages use **AccuWeather** data, but page titles stay generic:
 
 - `index.html` — Romanian default
 - `ro/index.html`
@@ -49,10 +49,15 @@ Navigation order must stay: **AccuWeather, ECMWF, ICON, then others**.
 ## Product rules
 
 - Romanian default, without diacritics.
+- Generated HTML files are output; update layout/content in `brevet_delacau_weather_research.py`, then regenerate pages.
 - No combined/average forecast. It was removed because it could show wrong numbers.
 - Each provider page must use only that provider's data.
 - If a provider lacks max/gust wind, show `— max`; do not copy avg wind into max.
 - Keep provider notes/technical details at the bottom only, unless user asks otherwise.
+- Header title/subtitle should be generic; provider name belongs in source selection/notes, not in the main title.
+- Route facts are shown as separate pills: start, distance, elevation gain.
+- Forecast update timestamp is grouped with the automatic update schedule near the bottom of the header.
+- `How to read this forecast` should appear before `Choose weather source`.
 - `Choose weather source` section should contain only provider buttons.
 - Keep language buttons visible on provider pages; active language must be visible in light and dark mode.
 - Use short network timeouts; do not repeatedly call failing APIs.
@@ -75,6 +80,8 @@ python3 brevet_delacau_weather_research.py
 Then review generated pages locally, especially:
 
 - default AccuWeather page
+- generic header title/subtitle and route fact pills
+- update schedule + forecast update timestamp grouping
 - source buttons/order
 - language buttons
 - 8h / 10h / 13h sections

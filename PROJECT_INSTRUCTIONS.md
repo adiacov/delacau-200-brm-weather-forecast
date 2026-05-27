@@ -9,7 +9,7 @@ The audience is cyclists, not developers. The page must answer:
 - What weather should I expect on the route?
 - What changes if I finish in 8h, 10h or 13h?
 - Which weather provider am I looking at?
-- When was the forecast last researched?
+- When was the forecast last updated?
 
 ## Important product rules
 
@@ -25,7 +25,7 @@ The audience is cyclists, not developers. The page must answer:
 - Keep the visible report rider-friendly.
 - Do not show raw JSON or confusing provider data in the main content.
 - Keep forecast sources / technical notes at the bottom.
-- Always show `Last researched` near the top.
+- Always show the forecast update timestamp in the header area, grouped with the automatic update schedule.
 - The site must remain static and GitHub Pages friendly: no build system required.
 
 ## Files
@@ -36,6 +36,7 @@ The audience is cyclists, not developers. The page must answer:
 - `assets/theme.js` — light/dark theme toggle.
 - `.github/workflows/update-forecast.yml` — daily GitHub Actions update at about 06:00 Moldova time.
 - `ANNOUNCEMENT.md` — Telegram announcement texts.
+- `LICENSE` — MIT license, copyright Alexandru Diacov.
 - Generated pages:
   - `index.html`
   - `ro/index.html`
@@ -57,6 +58,7 @@ The audience is cyclists, not developers. The page must answer:
 3. Fetches weather from public sources with short timeouts.
 4. Generates separate provider pages for AccuWeather, ECMWF, ICON, MET Norway / Yr, 7Timer Civil and Weather-Forecast.com.
 5. Generates Romanian, English and Russian versions.
+6. Rewrites the generated HTML/Markdown files; do not manually maintain generated HTML as the source of truth.
 
 ## Provider behavior
 
@@ -85,9 +87,10 @@ python3 brevet_delacau_weather_research.py
 Then review the generated page locally before committing, especially:
 
 - top summary
-- `Last researched` time
+- forecast update timestamp and automatic update schedule
 - 8h / 10h / 13h scenario rows
 - all language pages still render
+- reading guidance appears before weather-source selection
 - provider source buttons work and order is AccuWeather, ECMWF, ICON, then the rest
 - no combined/average forecast appears
 - no invented max/gust wind values; use `— max` when unavailable
