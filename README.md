@@ -10,27 +10,24 @@ Public page:
 
 ## Current product behavior
 
-- The default page uses **AccuWeather**.
+- The default page uses **ECMWF**.
 - The old combined/average forecast was removed.
 - Users can switch between separate provider pages:
-  - AccuWeather
   - ECMWF
   - ICON
-  - MET Norway / Yr
-  - 7Timer Civil
-  - Weather-Forecast.com
+  - AccuWeather
 - Each provider page shows only that provider's data.
 - If max/gust wind is unavailable from a provider, the page shows `— max` instead of inventing a value.
 - Each scenario can open an English interactive route map with route, checkpoints, weather markers, wind arrows and optional browser GPS location.
 
 ## What this project contains
 
-- `index.html` — Romanian default page, AccuWeather
-- `ro/index.html` — Romanian page, AccuWeather
-- `en/index.html` — English page, AccuWeather
-- `ru/index.html` — Russian page, AccuWeather
-- `sources/` — provider-specific pages in Romanian, English and Russian; provider order starts with AccuWeather, ECMWF, ICON
-- `maps/` — generated English interactive map pages, one per provider
+- `index.html` — Romanian default page, ECMWF
+- `ro/index.html` — Romanian page, ECMWF
+- `en/index.html` — English page, ECMWF
+- `ru/index.html` — Russian page, ECMWF
+- `sources/` — active provider-specific pages in Romanian, English and Russian; provider order is ECMWF, ICON, AccuWeather
+- `maps/` — generated English interactive map pages for active providers
 - `assets/style.css` — shared mobile-first design, light/dark theme support
 - `assets/theme.js` — visible light/dark theme toggle and collapsed-section behavior
 - `assets/map.js` — reusable Leaflet map behavior, weather markers, wind arrows and browser GPS location

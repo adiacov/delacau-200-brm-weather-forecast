@@ -28,25 +28,22 @@ Audience: non-technical cyclists. The page must be practical, mobile-friendly, a
 
 ## Current structure
 
-Main/default pages use **AccuWeather** data, but page titles stay generic:
+Main/default pages use **ECMWF** data, but page titles stay generic:
 
 - `index.html` — Romanian default
 - `ro/index.html`
 - `en/index.html`
 - `ru/index.html`
 
-Provider pages are in `sources/`, each in RO/EN/RU:
+Active provider pages are in `sources/`, each in RO/EN/RU:
 
-1. AccuWeather
-2. ECMWF
-3. ICON
-4. MET Norway / Yr
-5. 7Timer Civil
-6. Weather-Forecast.com
+1. ECMWF
+2. ICON
+3. AccuWeather
 
-English-only interactive map pages are in `maps/`, one per provider. They use Leaflet from CDN, `assets/map.js`, full GPX route/waypoints, provider-specific scenario rows, wind arrows and optional browser GPS location.
+English-only interactive map pages are in `maps/`, one per active provider. They use Leaflet from CDN, `assets/map.js`, full GPX route/waypoints, provider-specific scenario rows, wind arrows and optional browser GPS location.
 
-Navigation order must stay: **AccuWeather, ECMWF, ICON, then others**.
+Navigation order must stay: **ECMWF, ICON, AccuWeather**.
 
 ## Product rules
 
@@ -82,7 +79,7 @@ python3 brevet_delacau_weather_research.py
 
 Then review generated pages locally, especially:
 
-- default AccuWeather page
+- default ECMWF page
 - generic header title/subtitle and route fact pills
 - update schedule + forecast update timestamp grouping
 - source buttons/order

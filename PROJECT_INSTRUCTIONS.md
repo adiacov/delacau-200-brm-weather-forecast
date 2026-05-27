@@ -15,11 +15,11 @@ The audience is cyclists, not developers. The page must answer:
 
 - Romanian is the default language and must be written **without diacritics**.
 - Supported main pages:
-  - `index.html` — Romanian default, currently AccuWeather
-  - `ro/index.html` — Romanian, currently AccuWeather
-  - `en/index.html` — English, currently AccuWeather
-  - `ru/index.html` — Russian, currently AccuWeather
-- Provider-specific pages live in `sources/`.
+  - `index.html` — Romanian default, currently ECMWF
+  - `ro/index.html` — Romanian, currently ECMWF
+  - `en/index.html` — English, currently ECMWF
+  - `ru/index.html` — Russian, currently ECMWF
+- Active provider-specific pages live in `sources/` and are ECMWF, ICON and AccuWeather in that order.
 - English-only provider map pages live in `maps/`; forecast pages may link to them from each scenario.
 - There is **no combined/average forecast anymore**. Do not reintroduce provider averaging unless the user explicitly asks.
 - Each provider page must show only data from that provider. If a provider does not return max/gust wind, show `— max`; do not invent it by copying average wind.
@@ -44,32 +44,27 @@ The audience is cyclists, not developers. The page must answer:
   - `ro/index.html`
   - `en/index.html`
   - `ru/index.html`
-  - `sources/accuweather.html`, `sources/accuweather-en.html`, `sources/accuweather-ru.html`
   - `sources/ecmwf.html`, `sources/ecmwf-en.html`, `sources/ecmwf-ru.html`
   - `sources/icon.html`, `sources/icon-en.html`, `sources/icon-ru.html`
-  - `sources/met-norway.html`, `sources/met-norway-en.html`, `sources/met-norway-ru.html`
-  - `sources/7timer.html`, `sources/7timer-en.html`, `sources/7timer-ru.html`
-  - `sources/weather-forecast.html`, `sources/weather-forecast-en.html`, `sources/weather-forecast-ru.html`
-  - `maps/accuweather.html`, `maps/ecmwf.html`, `maps/icon.html`, `maps/met-norway.html`, `maps/7timer.html`, `maps/weather-forecast.html`
+  - `sources/accuweather.html`, `sources/accuweather-en.html`, `sources/accuweather-ru.html`
+  - `maps/ecmwf.html`, `maps/icon.html`, `maps/accuweather.html`
 
 ## How the generator works
 
 1. Reads the GPX route.
 2. For each finish scenario — 8h, 10h, 13h — estimates cyclist position every hour.
 3. Fetches weather from public sources with short timeouts.
-4. Generates separate provider pages for AccuWeather, ECMWF, ICON, MET Norway / Yr, 7Timer Civil and Weather-Forecast.com.
+4. Generates separate active provider pages for ECMWF, ICON and AccuWeather.
 5. Generates Romanian, English and Russian versions.
-6. Generates English map pages for each provider using the GPX route, GPX waypoints and provider-specific scenario rows.
+6. Generates English map pages for each active provider using the GPX route, GPX waypoints and provider-specific scenario rows.
 7. Rewrites the generated HTML/Markdown files; do not manually maintain generated HTML as the source of truth.
 
 ## Provider behavior
 
-- AccuWeather: currently the default page; public page gives day/night forecast and gust/max wind.
-- ECMWF: hourly model forecast from Open-Meteo.
+- ECMWF: current default; hourly model forecast from Open-Meteo.
 - ICON: hourly model forecast from Open-Meteo.
-- MET Norway / Yr: useful hourly point source; may not always expose gust/max wind.
-- 7Timer Civil: 3-hourly source; no true max/gust wind.
-- Weather-Forecast.com: broad Chisinau 3-period forecast; no true max/gust wind.
+- AccuWeather: public day/night forecast; values are applied to estimated route positions.
+- MET Norway / Yr, 7Timer Civil and Weather-Forecast.com are legacy/disabled sources; do not show or fetch them unless explicitly re-enabled.
 
 ## Network/API rules
 
@@ -93,7 +88,7 @@ Then review the generated page locally before committing, especially:
 - 8h / 10h / 13h scenario rows and collapsed/open behavior
 - all language pages still render
 - reading guidance appears before weather-source selection
-- provider source buttons work and order is AccuWeather, ECMWF, ICON, then the rest
+- provider source buttons work and order is ECMWF, ICON, AccuWeather
 - map pages load, scenario buttons work, wind arrows are visible, and browser location button does not break layout
 - no combined/average forecast appears
 - no invented max/gust wind values; use `— max` when unavailable
