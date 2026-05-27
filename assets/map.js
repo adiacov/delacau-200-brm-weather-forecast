@@ -28,7 +28,7 @@
   const route = data.route || [];
   const routeLine = L.polyline(route, { color: '#0f766e', weight: 5, opacity: 0.9 }).addTo(map);
   const bounds = routeLine.getBounds();
-  if (bounds.isValid()) map.fitBounds(bounds, { padding: [24, 24] });
+  if (bounds.isValid()) map.fitBounds(bounds, { padding: [56, 56] });
 
   const waypointLayer = L.layerGroup().addTo(map);
   (data.waypoints || []).forEach((point) => {
@@ -45,6 +45,10 @@
   });
 
   const weatherLayer = L.layerGroup().addTo(map);
+  let userMarker = null;
+  let accuracyCircle = null;
+  let watchingLocation = false;
+  let locationWatchId = null;
   const scenarioControl = document.querySelector('[data-scenario-control]');
   const modeControl = document.querySelector('[data-mode-control]');
   const fitButton = document.querySelector('[data-fit-route]');
@@ -59,6 +63,85 @@
 
   function windText(row) {
     return `${escapeHtml(row.wind_dir || '—')}, ${fmt(row.wind)} avg / ${fmt(row.wind_max)} max km/h`;
+  }
+
+  function showLocationError(message) {
+    const note = document.createElement('div');
+    note.className = 'location-note';
+    note.textContent = message || 'Location unavailable';
+    document.body.appendChild(note);
+    window.setTimeout(() => note.remove(), 2600);
+  }
+
+  function updateUserLocation(position) {
+    const latlng = [position.coords.latitude, position.coords.longitude];
+    const accuracy = position.coords.accuracy || 0;
+    if (!userMarker) {
+      userMarker = L.circleMarker(latlng, {
+        radius: 8,
+        color: '#ffffff',
+        fillColor: '#2563eb',
+        fillOpacity: 1,
+        weight: 3,
+        pane: 'markerPane',
+      }).addTo(map).bindPopup('You are here');
+      accuracyCircle = L.circle(latlng, {
+        radius: accuracy,
+        color: '#2563eb',
+        fillColor: '#60a5fa',
+        fillOpacity: 0.14,
+        weight: 1,
+      }).addTo(map);
+      map.setView(latlng, Math.max(map.getZoom(), 15));
+    } else {
+      userMarker.setLatLng(latlng);
+      accuracyCircle.setLatLng(latlng).setRadius(accuracy);
+    }
+  }
+
+  function startLocationWatch(button) {
+    if (!navigator.geolocation) {
+      showLocationError('Location is not supported by this browser');
+      return;
+    }
+    button.classList.add('loading');
+    locationWatchId = navigator.geolocation.watchPosition(
+      (position) => {
+        watchingLocation = true;
+        button.classList.remove('loading');
+        button.classList.add('active');
+        updateUserLocation(position);
+      },
+      () => {
+        button.classList.remove('loading');
+        showLocationError('Location unavailable');
+      },
+      { enableHighAccuracy: true, maximumAge: 8000, timeout: 12000 }
+    );
+  }
+
+  function addLocationControl() {
+    const Control = L.Control.extend({
+      options: { position: 'bottomleft' },
+      onAdd: () => {
+        const button = L.DomUtil.create('button', 'leaflet-control locate-control');
+        button.type = 'button';
+        button.title = 'Show my location';
+        button.setAttribute('aria-label', 'Show my location');
+        button.textContent = '⌖';
+        L.DomEvent.disableClickPropagation(button);
+        L.DomEvent.on(button, 'click', (event) => {
+          L.DomEvent.preventDefault(event);
+          if (!watchingLocation) {
+            startLocationWatch(button);
+          } else if (userMarker) {
+            map.setView(userMarker.getLatLng(), Math.max(map.getZoom(), 15));
+          }
+        });
+        return button;
+      }
+    });
+    map.addControl(new Control());
   }
 
   function keyIndexes(rows) {
@@ -150,9 +233,10 @@
 
   if (fitButton) {
     fitButton.addEventListener('click', () => {
-      if (bounds.isValid()) map.fitBounds(bounds, { padding: [24, 24] });
+      if (bounds.isValid()) map.fitBounds(bounds, { padding: [56, 56] });
     });
   }
 
+  addLocationControl();
   render();
 })();
