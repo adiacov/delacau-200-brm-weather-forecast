@@ -473,9 +473,9 @@ def fmt_num(x, suffix=""):
 
 
 def lang_links(current):
-    links = {"ro": "../ro/", "en": "../en/", "ru": "../ru/"}
+    links = {"ro": "../ro/index.html", "en": "../en/index.html", "ru": "../ru/index.html"}
     if current == "root":
-        links = {"ro": "ro/", "en": "en/", "ru": "ru/"}
+        links = {"ro": "ro/index.html", "en": "en/index.html", "ru": "ru/index.html"}
     return links
 
 
@@ -617,7 +617,7 @@ def main():
     (ROOT / "delacau_200_weather_31may2026.md").write_text(markdown(accuweather_rows, researched_at), encoding="utf-8")
     # Keep descriptive HTML copy for compatibility with the earlier report name.
     (ROOT / "delacau_200_weather_31may2026.html").write_text((ROOT / "en" / "index.html").read_text(encoding="utf-8"), encoding="utf-8")
-    print("Generated index.html, ro/, en/, ru/, accuweather/ and markdown report")
+    print("Generated index.html, ro/, en/, ru/, sources/ and markdown report")
 
 
 if __name__ == "__main__":
