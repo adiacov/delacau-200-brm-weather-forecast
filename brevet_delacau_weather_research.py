@@ -84,6 +84,8 @@ TEXT = {
 
 PLATFORM_STATUS = {
     "AccuWeather": "Day/night Moldova forecast, applied to route timing",
+    "ECMWF": "Open-Meteo ECMWF IFS hourly model forecast along the route corridor",
+    "ICON": "Open-Meteo ICON hourly model forecast along the route corridor",
     "MET Norway / Yr": "Hourly point forecast along the route corridor",
     "7Timer Civil": "3-hourly point forecast along the route corridor",
     "Weather-Forecast.com": "3-period Chisinau forecast, applied to route timing",
@@ -91,6 +93,8 @@ PLATFORM_STATUS = {
 
 SOURCES = {
     "accuweather": "AccuWeather",
+    "ecmwf": "ECMWF",
+    "icon": "ICON",
     "met-norway": "MET Norway / Yr",
     "7timer": "7Timer Civil",
     "weather-forecast": "Weather-Forecast.com",
@@ -201,6 +205,39 @@ def fetch_metno():
             out[km] = hourly
         except Exception as exc:
             PLATFORM_STATUS[f"MET Norway point {name}"] = f"Failed: {exc}"
+    return out
+
+
+def fetch_openmeteo_model(model, status_label):
+    out = {}
+    for km, name, lat, lon in WEATHER_POINTS:
+        try:
+            qs = urllib.parse.urlencode({
+                "latitude": f"{lat:.4f}",
+                "longitude": f"{lon:.4f}",
+                "hourly": "temperature_2m,precipitation,wind_speed_10m,wind_gusts_10m,wind_direction_10m,cloud_cover",
+                "timezone": "Europe/Chisinau",
+                "start_date": FORECAST_DATE,
+                "end_date": FORECAST_DATE,
+                "models": model,
+            })
+            data = get_json("https://api.open-meteo.com/v1/forecast?" + qs, timeout=20, headers={"User-Agent": "Mozilla/5.0"})
+            hourly = {}
+            h = data.get("hourly", {})
+            for i, ts in enumerate(h.get("time", [])):
+                hour = int(ts.split("T")[1].split(":")[0])
+                hourly[hour] = {
+                    "temp": h.get("temperature_2m", [None])[i],
+                    "wind": h.get("wind_speed_10m", [None])[i],
+                    "gust": h.get("wind_gusts_10m", [None])[i],
+                    "dir": degrees_to_cardinal(h.get("wind_direction_10m", [None])[i]),
+                    "cloud": h.get("cloud_cover", [None])[i],
+                    "rain": h.get("precipitation", [0])[i] or 0,
+                    "symbol": "model forecast",
+                }
+            out[km] = hourly
+        except Exception as exc:
+            PLATFORM_STATUS[f"{status_label} point {name}"] = f"Failed: {exc}"
     return out
 
 
@@ -537,8 +574,12 @@ def main():
     researched_at = datetime.now(TZ)
     met = fetch_metno()
     sev = fetch_7timer()
+    ecmwf = fetch_openmeteo_model("ecmwf_ifs025", "ECMWF")
+    icon = fetch_openmeteo_model("icon_seamless", "ICON")
     wf = fetch_weatherforecast_day_forecast()
     met_rows = build_rows(met, {})
+    ecmwf_rows = build_rows(ecmwf, {})
+    icon_rows = build_rows(icon, {})
     sev_rows = build_rows({}, sev)
     wf_rows = build_rows_from_periods(wf)
     accu = fetch_accuweather_day_forecast()
@@ -551,10 +592,12 @@ def main():
     (ROOT / "assets").mkdir(exist_ok=True)
 
     source_configs = {
+        "accuweather": ("AccuWeather", accuweather_rows, "AccuWeather public day/night forecast only; values are applied to estimated route positions."),
+        "ecmwf": ("ECMWF", ecmwf_rows, "ECMWF IFS hourly model forecast from Open-Meteo only."),
+        "icon": ("ICON", icon_rows, "ICON hourly model forecast from Open-Meteo only."),
         "met-norway": ("MET Norway / Yr", met_rows, "Hourly point forecast from MET Norway / Yr only."),
         "7timer": ("7Timer Civil", sev_rows, "3-hourly forecast from 7Timer only; values are matched to the nearest hour."),
         "weather-forecast": ("Weather-Forecast.com", wf_rows, "3-period Chisinau forecast from Weather-Forecast.com only; values are applied to estimated route positions."),
-        "accuweather": ("AccuWeather", accuweather_rows, "AccuWeather public day/night forecast only; values are applied to estimated route positions."),
     }
     default_note = {
         "ro": "Pagina implicita foloseste AccuWeather. Poti schimba sursa meteo din butoanele de mai jos.",

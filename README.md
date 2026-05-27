@@ -14,6 +14,8 @@ Public page:
 - The old combined/average forecast was removed.
 - Users can switch between separate provider pages:
   - AccuWeather
+  - ECMWF
+  - ICON
   - MET Norway / Yr
   - 7Timer Civil
   - Weather-Forecast.com
@@ -26,7 +28,7 @@ Public page:
 - `ro/index.html` — Romanian page, AccuWeather
 - `en/index.html` — English page, AccuWeather
 - `ru/index.html` — Russian page, AccuWeather
-- `sources/` — provider-specific pages in Romanian, English and Russian
+- `sources/` — provider-specific pages in Romanian, English and Russian; provider order starts with AccuWeather, ECMWF, ICON
 - `assets/style.css` — shared mobile-first design, light/dark theme support
 - `assets/theme.js` — visible light/dark theme toggle
 - `delacau-200-brm.gpx` — route GPX used for hourly route-position estimates

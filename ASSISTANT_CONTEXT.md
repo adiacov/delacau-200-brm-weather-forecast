@@ -19,7 +19,7 @@ Core rules:
 - Audience: non-technical cyclists.
 - Romanian default, without diacritics.
 - Main pages are AccuWeather-based by default: `index.html`, `ro/index.html`, `en/index.html`, `ru/index.html`.
-- Provider-specific pages are in `sources/`.
+- Provider-specific pages are in `sources/`; navigation order starts with AccuWeather, ECMWF, ICON.
 - Do **not** restore the old combined/average forecast. It was removed because it could show wrong numbers.
 - Each provider page must use only that provider's data.
 - If a provider does not provide max/gust wind, show `— max`; do not copy average wind into max.
