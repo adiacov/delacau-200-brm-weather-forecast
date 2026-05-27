@@ -41,7 +41,7 @@ Active provider pages are in `sources/`, each in RO/EN/RU:
 2. ICON
 3. AccuWeather
 
-English-only interactive map pages are in `maps/`, one per active provider. They use Leaflet from CDN, `assets/map.js`, full GPX route/waypoints, provider-specific scenario rows, wind arrows and optional browser GPS location.
+English-only interactive map pages are in `maps/`, one per active provider. They use Leaflet from CDN, `assets/map.js`, full GPX route/waypoints, provider-specific scenario rows and wind arrows.
 
 Navigation order must stay: **ECMWF, ICON, AccuWeather**.
 
@@ -87,7 +87,7 @@ Then review generated pages locally, especially:
 - 8h / 10h / 13h sections
 - wind avg/max behavior
 - collapsed weather-source and scenario behavior
-- map pages, map buttons, wind arrows and optional location control
+- map pages, map buttons and wind arrows
 - dark/light theme
 
 Then:

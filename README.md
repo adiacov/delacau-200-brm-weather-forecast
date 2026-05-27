@@ -18,7 +18,7 @@ Public page:
   - AccuWeather
 - Each provider page shows only that provider's data.
 - If max/gust wind is unavailable from a provider, the page shows `— max` instead of inventing a value.
-- Each scenario can open an English interactive route map with route, checkpoints, weather markers, wind arrows and optional browser GPS location.
+- Each scenario can open an English interactive route map with route, checkpoints, weather markers and wind arrows.
 
 ## What this project contains
 
@@ -30,7 +30,7 @@ Public page:
 - `maps/` — generated English interactive map pages for active providers
 - `assets/style.css` — shared mobile-first design, light/dark theme support
 - `assets/theme.js` — visible light/dark theme toggle and collapsed-section behavior
-- `assets/map.js` — reusable Leaflet map behavior, weather markers, wind arrows and browser GPS location
+- `assets/map.js` — reusable Leaflet map behavior, weather markers and wind arrows
 - `delacau-200-brm.gpx` — route GPX used for hourly route-position estimates and map route/waypoints
 - `brevet_delacau_weather_research.py` — generator script
 - `.github/workflows/update-forecast.yml` — daily automatic update around 06:00 Moldova time

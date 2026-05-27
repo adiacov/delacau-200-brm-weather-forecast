@@ -35,7 +35,7 @@ The audience is cyclists, not developers. The page must answer:
 - `delacau-200-brm.gpx` — route file used to estimate rider position by kilometer.
 - `assets/style.css` — shared responsive styling.
 - `assets/theme.js` — light/dark theme toggle and collapsed-section/hash behavior.
-- `assets/map.js` — Leaflet map rendering, weather markers, wind arrows and optional browser GPS location.
+- `assets/map.js` — Leaflet map rendering, weather markers and wind arrows.
 - `.github/workflows/update-forecast.yml` — daily GitHub Actions update at about 06:00 Moldova time.
 - `ANNOUNCEMENT.md` — Telegram announcement texts.
 - `LICENSE` — MIT license, copyright Alexandru Diacov.
@@ -89,7 +89,7 @@ Then review the generated page locally before committing, especially:
 - all language pages still render
 - reading guidance appears before weather-source selection
 - provider source buttons work and order is ECMWF, ICON, AccuWeather
-- map pages load, scenario buttons work, wind arrows are visible, and browser location button does not break layout
+- map pages load, scenario buttons work, and wind arrows are visible
 - no combined/average forecast appears
 - no invented max/gust wind values; use `— max` when unavailable
 - for UI changes, compare before/after with `git diff` and open the local page in a browser
