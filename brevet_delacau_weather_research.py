@@ -41,7 +41,7 @@ TEXT = {
     "ro": {
         "lang_name": "Romana", "html_lang": "ro", "dir": "ltr", "active": "RO",
         "title": "Vremea pe traseu pentru Delacau 200 BRM",
-        "subtitle": "Prognoza ora cu ora pentru 31 mai 2026 · Start: 06:00 · Scenarii: 8h / 10h / 13h",
+        "subtitle": "Prognoza ora cu ora pentru 31 mai 2026 · Scenarii: 8h / 10h / 13h",
         "last": "Ultima actualizare a prognozei", "forecast_for": "Prognoza pentru", "start": "Start", "route": "Ruta", "distance": "Distanta", "elevation_gain": "Urcare totala", "auto_update": "Pagina este planificata sa se actualizeze zilnic in jurul orei 06:00, ora Moldovei.",
         "summary": "Concluzie pe scurt", "overall": "General", "temp": "Temperatura, °C", "wind": "Vant, km/h", "wind_avg": "mediu", "wind_max": "max", "wind_dir": "Directie vant", "rain": "Ploaie, mm",
         "route_info": "Cum se citeste prognoza", "route_note": "Alege scenariul cel mai apropiat de timpul tau estimat de finish: 8h, 10h sau 13h. Pentru fiecare ora vezi kilometrul aproximativ si vremea probabila in acea zona. Daca ritmul tau difera, foloseste kilometrul aproximativ ca reper.",
@@ -55,7 +55,7 @@ TEXT = {
     "en": {
         "lang_name": "English", "html_lang": "en", "dir": "ltr", "active": "EN",
         "title": "Weather on the route for Delacau 200 BRM",
-        "subtitle": "Hour-by-hour forecast for 31 May 2026 · Start: 06:00 · Scenarios: 8h / 10h / 13h",
+        "subtitle": "Hour-by-hour forecast for 31 May 2026 · Scenarios: 8h / 10h / 13h",
         "last": "Forecast last updated", "forecast_for": "Forecast for", "start": "Start", "route": "Route", "distance": "Distance", "elevation_gain": "Elevation gain", "auto_update": "This page is scheduled to update daily around 06:00 Moldova time.",
         "summary": "Short conclusion", "overall": "Overall", "temp": "Temperature, °C", "wind": "Wind, km/h", "wind_avg": "avg", "wind_max": "max", "wind_dir": "Wind direction", "rain": "Rain, mm",
         "route_info": "How to read this forecast", "route_note": "Choose the scenario closest to your estimated finish time: 8h, 10h or 13h. For each hour you see the approximate kilometer and the likely weather in that area. If your pace is different, use the approximate kilometer as your reference.",
@@ -69,7 +69,7 @@ TEXT = {
     "ru": {
         "lang_name": "Русский", "html_lang": "ru", "dir": "ltr", "active": "RU",
         "title": "Погода на маршруте Delacau 200 BRM",
-        "subtitle": "Почасовой прогноз на 31 мая 2026 · Старт: 06:00 · Сценарии: 8ч / 10ч / 13ч",
+        "subtitle": "Почасовой прогноз на 31 мая 2026 · Сценарии: 8ч / 10ч / 13ч",
         "last": "Прогноз обновлен", "forecast_for": "Прогноз на", "start": "Старт", "route": "Маршрут", "distance": "Дистанция", "elevation_gain": "Набор высоты", "auto_update": "Страница запланирована к ежедневному обновлению около 06:00 по времени Молдовы.",
         "summary": "Краткий вывод", "overall": "В целом", "temp": "Температура, °C", "wind": "Ветер, км/ч", "wind_avg": "ср.", "wind_max": "макс.", "wind_dir": "Направление ветра", "rain": "Дождь, мм",
         "route_info": "Как читать этот прогноз", "route_note": "Выберите сценарий, который ближе всего к вашему ожидаемому времени финиша: 8ч, 10ч или 13ч. Для каждого часа указан примерный километр и ожидаемая погода в этой зоне. Если ваш темп отличается, ориентируйтесь по примерному километру.",
@@ -601,16 +601,16 @@ def main():
         "en": "Default page uses AccuWeather. You can switch the weather source using the buttons below.",
         "ru": "Страница по умолчанию использует AccuWeather. Источник погоды можно переключить кнопками ниже.",
     }
-    (ROOT / "index.html").write_text(page_html("ro", accuweather_rows, researched_at, root=True, title_override="Prognoza meteo pentru Delacau 200 BRM", subtitle_override="Prognoza pe traseu pentru 31 mai 2026 · Start: 06:00 · Scenarii: 8h / 10h / 13h", extra_note=default_note["ro"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, active_source="accuweather"), encoding="utf-8")
-    (ROOT / "ro" / "index.html").write_text(page_html("ro", accuweather_rows, researched_at, title_override="Prognoza meteo pentru Delacau 200 BRM", subtitle_override="Prognoza pe traseu pentru 31 mai 2026 · Start: 06:00 · Scenarii: 8h / 10h / 13h", extra_note=default_note["ro"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, source_prefix="../", active_source="accuweather"), encoding="utf-8")
-    (ROOT / "en" / "index.html").write_text(page_html("en", accuweather_rows, researched_at, title_override="Weather forecast for Delacau 200 BRM", subtitle_override="Route forecast for 31 May 2026 · Start: 06:00 · Scenarios: 8h / 10h / 13h", extra_note=default_note["en"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, source_prefix="../", active_source="accuweather"), encoding="utf-8")
-    (ROOT / "ru" / "index.html").write_text(page_html("ru", accuweather_rows, researched_at, title_override="Прогноз погоды для Delacau 200 BRM", subtitle_override="Прогноз по маршруту на 31 мая 2026 · Старт: 06:00 · Сценарии: 8ч / 10ч / 13ч", extra_note=default_note["ru"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, source_prefix="../", active_source="accuweather"), encoding="utf-8")
+    (ROOT / "index.html").write_text(page_html("ro", accuweather_rows, researched_at, root=True, title_override="Prognoza meteo pentru Delacau 200 BRM", subtitle_override="Prognoza pe traseu pentru 31 mai 2026 · Scenarii: 8h / 10h / 13h", extra_note=default_note["ro"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, active_source="accuweather"), encoding="utf-8")
+    (ROOT / "ro" / "index.html").write_text(page_html("ro", accuweather_rows, researched_at, title_override="Prognoza meteo pentru Delacau 200 BRM", subtitle_override="Prognoza pe traseu pentru 31 mai 2026 · Scenarii: 8h / 10h / 13h", extra_note=default_note["ro"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, source_prefix="../", active_source="accuweather"), encoding="utf-8")
+    (ROOT / "en" / "index.html").write_text(page_html("en", accuweather_rows, researched_at, title_override="Weather forecast for Delacau 200 BRM", subtitle_override="Route forecast for 31 May 2026 · Scenarios: 8h / 10h / 13h", extra_note=default_note["en"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, source_prefix="../", active_source="accuweather"), encoding="utf-8")
+    (ROOT / "ru" / "index.html").write_text(page_html("ru", accuweather_rows, researched_at, title_override="Прогноз погоды для Delacau 200 BRM", subtitle_override="Прогноз по маршруту на 31 мая 2026 · Сценарии: 8ч / 10ч / 13ч", extra_note=default_note["ru"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, source_prefix="../", active_source="accuweather"), encoding="utf-8")
 
     for slug, (name, source_rows, note) in source_configs.items():
         for lang in ["ro", "en", "ru"]:
             suffix = "" if lang == "ro" else f"-{lang}"
             title = "Weather forecast for Delacau 200 BRM" if lang == "en" else "Prognoza meteo pentru Delacau 200 BRM" if lang == "ro" else "Прогноз погоды для Delacau 200 BRM"
-            subtitle = "Route forecast for 31 May 2026 · Start: 06:00 · Scenarios: 8h / 10h / 13h" if lang == "en" else "Prognoza pe traseu pentru 31 mai 2026 · Start: 06:00 · Scenarii: 8h / 10h / 13h" if lang == "ro" else "Прогноз по маршруту на 31 мая 2026 · Старт: 06:00 · Сценарии: 8ч / 10ч / 13ч"
+            subtitle = "Route forecast for 31 May 2026 · Scenarios: 8h / 10h / 13h" if lang == "en" else "Prognoza pe traseu pentru 31 mai 2026 · Scenarii: 8h / 10h / 13h" if lang == "ro" else "Прогноз по маршруту на 31 мая 2026 · Сценарии: 8ч / 10ч / 13ч"
             lang_override = {"ro": f"{slug}.html", "en": f"{slug}-en.html", "ru": f"{slug}-ru.html"}
             (ROOT / "sources" / f"{slug}{suffix}.html").write_text(page_html(lang, source_rows, researched_at, title_override=title, subtitle_override=subtitle, extra_note=note, source_status={name: note}, show_source_links=True, source_prefix="../", active_source=slug, lang_links_override=lang_override), encoding="utf-8")
     (ROOT / "delacau_200_weather_31may2026.md").write_text(markdown(accuweather_rows, researched_at), encoding="utf-8")
