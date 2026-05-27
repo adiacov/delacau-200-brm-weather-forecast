@@ -502,7 +502,6 @@ def page_html(lang, rows_by_duration, researched_at, root=False, title_override=
     page_subtitle = subtitle_override or t["subtitle"]
     html = [f'<!doctype html><html lang="{t["html_lang"]}" dir="{t["dir"]}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(page_title)}</title><link rel="stylesheet" href="{css}"><script src="{js}" defer></script></head><body><main class="page">']
     html.append('<section class="hero"><div class="topbar"><div class="controls">')
-    html.append('<div class="palette-switcher" aria-label="Temporary color palette preview"><button type="button" data-palette="route">1</button><button type="button" data-palette="sky">2</button><button type="button" data-palette="lavender">3</button><button type="button" data-palette="forest">4</button><button type="button" data-palette="sunset">5</button></div>')
     if not hide_lang:
         html.append('<div class="lang">')
         for code, label in [("ro", "RO"), ("ru", "RU"), ("en", "EN")]:
