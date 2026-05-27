@@ -62,8 +62,8 @@
   }
 
   function windArrow(dir) {
-    // Keep the arrow visually aligned with the compass label shown by the forecast.
-    return { N: '↑', NE: '↗', E: '→', SE: '↘', S: '↓', SW: '↙', W: '←', NW: '↖' }[dir] || '·';
+    // Weather directions describe where wind comes from; arrow shows where it blows to.
+    return { N: '↓', NE: '↙', E: '←', SE: '↖', S: '↑', SW: '↗', W: '→', NW: '↘' }[dir] || '·';
   }
 
   function windText(row) {
