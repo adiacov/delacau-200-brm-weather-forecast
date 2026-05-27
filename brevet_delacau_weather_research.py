@@ -529,6 +529,11 @@ def weather_icon(row):
     }[weather_kind(row)]
 
 
+def wind_arrow(direction):
+    # Weather directions describe where wind comes from; arrow shows where it blows to.
+    return {"N": "↓", "NE": "↙", "E": "←", "SE": "↖", "S": "↑", "SW": "↗", "W": "→", "NW": "↘"}.get(direction, "·")
+
+
 def weather_label(row, lang):
     labels = {
         "ro": {"storm": "furtuna", "rain": "ploaie posibila", "fog": "ceata", "snow": "ninsoare", "clear": "senin", "partly": "partial noros", "cloudy": "noros", "dry": "uscat"},
@@ -609,10 +614,12 @@ def page_html(lang, rows_by_duration, researched_at, root=False, title_override=
             wind = fmt_num(r["wind"])
             wind_max = fmt_num(r["wind_max"])
             wind_dir = escape(r["wind_dir"])
+            wind_arrow_html = escape(wind_arrow(r["wind_dir"]))
+            wind_dir_display = f'<span class="wind-dir"><span class="popup-wind-arrow">{wind_arrow_html}</span> <b>{wind_dir}</b></span>'
             wind_speed = f'{wind} {escape(t["wind_avg"])} / {wind_max} {escape(t["wind_max"])}'
             weather = f'{weather_icon(r)} {escape(weather_label(r, lang))}'
-            html.append(f'<tr><td><b>{r["time"]}</b></td><td>{r["km"]}</td><td>{escape(r["place"])}</td><td><span class="weather-cell">{weather}</span></td><td>{temp}</td><td>{rain}</td><td><b>{wind_dir}</b></td><td>{wind_speed}</td></tr>')
-            cards_mobile.append(f'<div class="hour-card"><div class="time">{r["time"]} · {r["km"]} km · <span class="weather-cell">{weather}</span></div><div class="grid"><div>{escape(t["sector"])}: <b>{escape(r["place"])}</b></div><div>{escape(t["temp"])}: <b>{temp}</b></div><div>{escape(t["rain"])}: <b>{rain}</b></div><div>{escape(t["wind_dir"])}: <b>{wind_dir}</b></div><div>{escape(t["wind"])}: <b>{wind_speed}</b></div></div></div>')
+            html.append(f'<tr><td><b>{r["time"]}</b></td><td>{r["km"]}</td><td>{escape(r["place"])}</td><td><span class="weather-cell">{weather}</span></td><td>{temp}</td><td>{rain}</td><td>{wind_dir_display}</td><td>{wind_speed}</td></tr>')
+            cards_mobile.append(f'<div class="hour-card"><div class="time">{r["time"]} · {r["km"]} km · <span class="weather-cell">{weather}</span></div><div class="grid"><div>{escape(t["sector"])}: <b>{escape(r["place"])}</b></div><div>{escape(t["temp"])}: <b>{temp}</b></div><div>{escape(t["rain"])}: <b>{rain}</b></div><div>{escape(t["wind_dir"])}: {wind_dir_display}</div><div>{escape(t["wind"])}: <b>{wind_speed}</b></div></div></div>')
         html.append('</tbody></table></div>')
         cards_mobile.append('</div>')
         html.extend(cards_mobile)

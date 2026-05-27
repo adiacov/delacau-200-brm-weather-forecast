@@ -150,7 +150,7 @@ td:first-child{font-weight:850;color:var(--text)}
 .status{display:inline-block;border-radius:999px;padding:4px 9px;font-size:12px;font-weight:850;white-space:nowrap}
 .status.ok{background:var(--ok-bg);color:var(--ok-text)}
 .status.warn{background:var(--warn-bg);color:var(--warn-text)}
-.weather-cell{display:inline-flex;align-items:center;gap:6px;font-weight:850;white-space:nowrap}
+.weather-cell,.wind-dir{display:inline-flex;align-items:center;gap:6px;font-weight:850;white-space:nowrap}
 .sources{font-size:14px;color:var(--muted);background:transparent}
 .sources ul{padding-left:20px}.sources li{margin:7px 0}.sources b{color:var(--text)}
 .cards-mobile{display:none}
