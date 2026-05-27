@@ -50,7 +50,7 @@ TEXT = {
         "sources": "Surse verificate", "sources_note": "Sectiune tehnica, pastrata jos pentru transparenta.",
         "disclaimer": "Prognoza este informativa. Vremea se poate schimba; verifica din nou inainte de start.",
         "conclusion_prefix": "Cel mai probabil: vreme buna pentru bicicleta, in mare parte uscata.",
-        "updated_tz": "ora Moldovei", "hours": "ore",
+        "updated_tz": "ora Moldovei", "hours": "ore", "map": "Vezi pe harta",
     },
     "en": {
         "lang_name": "English", "html_lang": "en", "dir": "ltr", "active": "EN",
@@ -64,7 +64,7 @@ TEXT = {
         "sources": "Forecast sources checked", "sources_note": "Technical section kept at the bottom for transparency.",
         "disclaimer": "Forecast is informational. Weather can change; check again before the start.",
         "conclusion_prefix": "Most probable: good cycling weather, mostly dry.",
-        "updated_tz": "Moldova time", "hours": "hours",
+        "updated_tz": "Moldova time", "hours": "hours", "map": "See on map",
     },
     "ru": {
         "lang_name": "Русский", "html_lang": "ru", "dir": "ltr", "active": "RU",
@@ -78,7 +78,7 @@ TEXT = {
         "sources": "Проверенные источники", "sources_note": "Технический раздел оставлен внизу для прозрачности.",
         "disclaimer": "Прогноз носит информационный характер. Погода может измениться; проверьте еще раз перед стартом.",
         "conclusion_prefix": "Наиболее вероятно: хорошая погода для велосипеда, в основном сухо.",
-        "updated_tz": "время Молдовы", "hours": "часов",
+        "updated_tz": "время Молдовы", "hours": "часов", "map": "На карте",
     },
 }
 
@@ -131,6 +131,30 @@ def load_gpx_points():
     for p in root.findall(".//g:trkpt", ns) or root.findall(".//trkpt"):
         pts.append((float(p.attrib["lat"]), float(p.attrib["lon"])))
     return pts
+
+
+def load_gpx_waypoints():
+    path = ROOT / "delacau-200-brm.gpx"
+    if not path.exists():
+        return []
+    ns = {"g": "http://www.topografix.com/GPX/1/1"}
+    root = ET.parse(path).getroot()
+    waypoints = []
+    for p in root.findall(".//g:wpt", ns) or root.findall(".//wpt"):
+        def child_text(name):
+            child = p.find(f"g:{name}", ns)
+            if child is None:
+                child = p.find(name)
+            return "" if child is None or child.text is None else " ".join(child.text.split())
+        point_name = child_text("name") or "Route point"
+        waypoints.append({
+            "lat": float(p.attrib["lat"]),
+            "lon": float(p.attrib["lon"]),
+            "name": point_name,
+            "desc": child_text("desc") or child_text("cmt"),
+            "type": "control" if (point_name.startswith("CP") or "Start" in point_name) else "alert",
+        })
+    return waypoints
 
 
 def route_samples_from_gpx():
@@ -480,17 +504,18 @@ def lang_links(current):
 
 
 def source_links_html(lang, prefix="", active="accuweather"):
-    labels = {"ro": "Alege sursa meteo", "en": "Choose weather source", "ru": "Выберите источник погоды"}
-    html = [f'<section class="section source-section"><h2>{escape(labels[lang])}</h2><div class="source-links">']
+    labels = {"ro": "Sursa meteo", "en": "Weather source", "ru": "Источник погоды"}
+    active_name = SOURCES.get(active, "AccuWeather")
+    html = [f'<details class="section source-section source-collapsible"><summary><h2>{escape(labels[lang])}</h2><span class="active-source-pill">{escape(active_name)}</span></summary><div class="source-links">']
     for slug, name in SOURCES.items():
         suffix = "" if lang == "ro" else f"-{lang}"
         cls = ' class="active"' if active == slug else ""
-        html.append(f'<a{cls} href="{prefix}sources/{slug}{suffix}.html">{escape(name)}</a>')
-    html.append('</div></section>')
+        html.append(f'<a{cls} data-source-link href="{prefix}sources/{slug}{suffix}.html">{escape(name)}</a>')
+    html.append('</div></details>')
     return "\n".join(html)
 
 
-def page_html(lang, rows_by_duration, researched_at, root=False, title_override=None, subtitle_override=None, extra_note=None, source_status=None, hide_lang=False, show_source_links=False, source_prefix="", active_source="accuweather", lang_links_override=None):
+def page_html(lang, rows_by_duration, researched_at, root=False, title_override=None, subtitle_override=None, extra_note=None, source_status=None, hide_lang=False, show_source_links=False, source_prefix="", active_source="accuweather", lang_links_override=None, map_prefix="maps/", map_back="../index.html"):
     t = TEXT[lang]
     links = lang_links_override or lang_links("root" if root else lang)
     conclusion_text, temp_range, wind_avg, total_rain = conclusion(rows_by_duration, lang)
@@ -525,7 +550,9 @@ def page_html(lang, rows_by_duration, researched_at, root=False, title_override=
         html.append(source_links_html(lang, source_prefix, active_source))
 
     for duration, rows in rows_by_duration.items():
-        html.append(f'<section class="scenario"><h3>{escape(t["scenario"])}: {escape(t["finish"])} {duration} {escape(t["hours"])} (06:00–{START_HOUR+duration:02d}:00)</h3>')
+        map_href = f'{map_prefix}{active_source}.html?scenario={duration}&back={urllib.parse.quote(map_back, safe="/.")}'
+        scenario_title = f'{escape(t["scenario"])}: {escape(t["finish"])} {duration} {escape(t["hours"])} (06:00–{START_HOUR+duration:02d}:00)'
+        html.append(f'<details class="scenario" id="scenario-{duration}" data-scenario="{duration}"><summary class="scenario-head"><h3>{scenario_title}</h3><a class="map-button" href="{map_href}" onclick="event.stopPropagation()">{escape(t["map"])}</a></summary>')
         html.append('<div class="table-wrap"><table><thead><tr>')
         for head in [t["time"], t["km"], t["sector"], t["temp"], t["rain"], t["wind_dir"], t["wind"], t["advice"]]:
             html.append(f'<th>{escape(head)}</th>')
@@ -546,13 +573,67 @@ def page_html(lang, rows_by_duration, researched_at, root=False, title_override=
         html.append('</tbody></table></div>')
         cards_mobile.append('</div>')
         html.extend(cards_mobile)
-        html.append('</section>')
+        html.append('</details>')
 
     html.append(f'<section class="section sources"><h2>{escape(t["sources"])}</h2><p>{escape(t["sources_note"])}</p><ul>')
     for k, v in (source_status or PLATFORM_STATUS).items():
         html.append(f'<li><b>{escape(k)}</b>: {escape(v)}</li>')
     html.append(f'</ul><p>{escape(t["disclaimer"])}</p></section></main></body></html>')
     return "\n".join(html)
+
+
+def map_data(source_slug, source_name, rows_by_duration, researched_at):
+    route = [[round(lat, 6), round(lon, 6)] for lat, lon in load_gpx_points()]
+    scenarios = {}
+    for duration, rows in rows_by_duration.items():
+        scenario_rows = []
+        for r in rows:
+            scenario_rows.append({
+                "time": r["time"],
+                "km": r["km"],
+                "place": r["place"],
+                "lat": round(r["lat"], 6),
+                "lon": round(r["lon"], 6),
+                "temp": None if r["temp"] is None else round(r["temp"]),
+                "rain": round(r["rain"] or 0, 1),
+                "wind": None if r["wind"] is None else round(r["wind"]),
+                "wind_max": None if r["wind_max"] is None else round(r["wind_max"]),
+                "wind_dir": r["wind_dir"] or "—",
+                "condition": r["condition"],
+                "caution": bool(r["caution"]),
+            })
+        scenarios[str(duration)] = scenario_rows
+    return {
+        "sourceSlug": source_slug,
+        "sourceName": source_name,
+        "eventName": "Delacau 200 BRM",
+        "forecastDate": "31 May 2026",
+        "updated": researched_at.strftime("%Y-%m-%d, %H:%M Moldova time"),
+        "route": route,
+        "waypoints": load_gpx_waypoints(),
+        "scenarios": scenarios,
+        "defaultBack": "../index.html",
+    }
+
+
+def map_page_html(source_slug, source_name, rows_by_duration, researched_at):
+    data = json.dumps(map_data(source_slug, source_name, rows_by_duration, researched_at), ensure_ascii=False, separators=(",", ":"))
+    title = f"Route weather map · {source_name}"
+    return "\n".join([
+        '<!doctype html><html lang="en" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
+        f'<title>{escape(title)}</title><link rel="stylesheet" href="../assets/style.css">',
+        '<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">',
+        '<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>',
+        '<script src="../assets/theme.js" defer></script><script src="../assets/map.js" defer></script></head><body class="map-body">',
+        '<script>window.DELACAU_MAP_DATA = ' + data + ';</script>',
+        '<main class="map-page"><header class="map-header compact-map-header">',
+        '<a class="map-control-button back-link" data-back-link href="../index.html">← Back</a>',
+        '<button class="map-control-button" type="button" data-scenario-control></button>',
+        '<button class="map-control-button" type="button" data-mode-control></button>',
+        '<button class="map-control-button fit-button" type="button" data-fit-route>Fit route</button>',
+        '</header><div id="route-map" class="route-map" aria-label="Interactive route weather map"></div>',
+        '</main></body></html>',
+    ])
 
 
 def markdown(rows_by_duration, researched_at):
@@ -586,6 +667,7 @@ def main():
     (ROOT / "en").mkdir(exist_ok=True)
     (ROOT / "ru").mkdir(exist_ok=True)
     (ROOT / "sources").mkdir(exist_ok=True)
+    (ROOT / "maps").mkdir(exist_ok=True)
     (ROOT / "assets").mkdir(exist_ok=True)
 
     source_configs = {
@@ -601,10 +683,10 @@ def main():
         "en": "Default page uses AccuWeather. You can switch the weather source using the buttons below.",
         "ru": "Страница по умолчанию использует AccuWeather. Источник погоды можно переключить кнопками ниже.",
     }
-    (ROOT / "index.html").write_text(page_html("ro", accuweather_rows, researched_at, root=True, title_override="Prognoza meteo pentru Delacau 200 BRM", subtitle_override="Prognoza pe traseu pentru 31 mai 2026 · Scenarii: 8h / 10h / 13h", extra_note=default_note["ro"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, active_source="accuweather"), encoding="utf-8")
-    (ROOT / "ro" / "index.html").write_text(page_html("ro", accuweather_rows, researched_at, title_override="Prognoza meteo pentru Delacau 200 BRM", subtitle_override="Prognoza pe traseu pentru 31 mai 2026 · Scenarii: 8h / 10h / 13h", extra_note=default_note["ro"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, source_prefix="../", active_source="accuweather"), encoding="utf-8")
-    (ROOT / "en" / "index.html").write_text(page_html("en", accuweather_rows, researched_at, title_override="Weather forecast for Delacau 200 BRM", subtitle_override="Route forecast for 31 May 2026 · Scenarios: 8h / 10h / 13h", extra_note=default_note["en"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, source_prefix="../", active_source="accuweather"), encoding="utf-8")
-    (ROOT / "ru" / "index.html").write_text(page_html("ru", accuweather_rows, researched_at, title_override="Прогноз погоды для Delacau 200 BRM", subtitle_override="Прогноз по маршруту на 31 мая 2026 · Сценарии: 8ч / 10ч / 13ч", extra_note=default_note["ru"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, source_prefix="../", active_source="accuweather"), encoding="utf-8")
+    (ROOT / "index.html").write_text(page_html("ro", accuweather_rows, researched_at, root=True, title_override="Prognoza meteo pentru Delacau 200 BRM", subtitle_override="Prognoza pe traseu pentru 31 mai 2026 · Scenarii: 8h / 10h / 13h", extra_note=default_note["ro"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, active_source="accuweather", map_prefix="maps/", map_back="../index.html"), encoding="utf-8")
+    (ROOT / "ro" / "index.html").write_text(page_html("ro", accuweather_rows, researched_at, title_override="Prognoza meteo pentru Delacau 200 BRM", subtitle_override="Prognoza pe traseu pentru 31 mai 2026 · Scenarii: 8h / 10h / 13h", extra_note=default_note["ro"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, source_prefix="../", active_source="accuweather", map_prefix="../maps/", map_back="../ro/index.html"), encoding="utf-8")
+    (ROOT / "en" / "index.html").write_text(page_html("en", accuweather_rows, researched_at, title_override="Weather forecast for Delacau 200 BRM", subtitle_override="Route forecast for 31 May 2026 · Scenarios: 8h / 10h / 13h", extra_note=default_note["en"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, source_prefix="../", active_source="accuweather", map_prefix="../maps/", map_back="../en/index.html"), encoding="utf-8")
+    (ROOT / "ru" / "index.html").write_text(page_html("ru", accuweather_rows, researched_at, title_override="Прогноз погоды для Delacau 200 BRM", subtitle_override="Прогноз по маршруту на 31 мая 2026 · Сценарии: 8ч / 10ч / 13ч", extra_note=default_note["ru"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, source_prefix="../", active_source="accuweather", map_prefix="../maps/", map_back="../ru/index.html"), encoding="utf-8")
 
     for slug, (name, source_rows, note) in source_configs.items():
         for lang in ["ro", "en", "ru"]:
@@ -612,8 +694,10 @@ def main():
             title = "Weather forecast for Delacau 200 BRM" if lang == "en" else "Prognoza meteo pentru Delacau 200 BRM" if lang == "ro" else "Прогноз погоды для Delacau 200 BRM"
             subtitle = "Route forecast for 31 May 2026 · Scenarios: 8h / 10h / 13h" if lang == "en" else "Prognoza pe traseu pentru 31 mai 2026 · Scenarii: 8h / 10h / 13h" if lang == "ro" else "Прогноз по маршруту на 31 мая 2026 · Сценарии: 8ч / 10ч / 13ч"
             lang_override = {"ro": f"{slug}.html", "en": f"{slug}-en.html", "ru": f"{slug}-ru.html"}
-            (ROOT / "sources" / f"{slug}{suffix}.html").write_text(page_html(lang, source_rows, researched_at, title_override=title, subtitle_override=subtitle, extra_note=note, source_status={name: note}, show_source_links=True, source_prefix="../", active_source=slug, lang_links_override=lang_override), encoding="utf-8")
-    print("Generated index.html, ro/, en/, ru/ and sources/")
+            back = f"../sources/{slug}{suffix}.html"
+            (ROOT / "sources" / f"{slug}{suffix}.html").write_text(page_html(lang, source_rows, researched_at, title_override=title, subtitle_override=subtitle, extra_note=note, source_status={name: note}, show_source_links=True, source_prefix="../", active_source=slug, lang_links_override=lang_override, map_prefix="../maps/", map_back=back), encoding="utf-8")
+        (ROOT / "maps" / f"{slug}.html").write_text(map_page_html(slug, name, source_rows, researched_at), encoding="utf-8")
+    print("Generated index.html, ro/, en/, ru/, sources/ and maps/")
 
 
 if __name__ == "__main__":
