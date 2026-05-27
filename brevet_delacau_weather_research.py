@@ -610,7 +610,7 @@ def main():
         for lang in ["ro", "en", "ru"]:
             suffix = "" if lang == "ro" else f"-{lang}"
             title = "Weather forecast for Delacau 200 BRM" if lang == "en" else "Prognoza meteo pentru Delacau 200 BRM" if lang == "ro" else "Прогноз погоды для Delacau 200 BRM"
-            subtitle = "Provider-specific forecast · 31 May 2026 · 8h / 10h / 13h scenarios"
+            subtitle = "Route forecast for 31 May 2026 · Start: 06:00 · Scenarios: 8h / 10h / 13h" if lang == "en" else "Prognoza pe traseu pentru 31 mai 2026 · Start: 06:00 · Scenarii: 8h / 10h / 13h" if lang == "ro" else "Прогноз по маршруту на 31 мая 2026 · Старт: 06:00 · Сценарии: 8ч / 10ч / 13ч"
             lang_override = {"ro": f"{slug}.html", "en": f"{slug}-en.html", "ru": f"{slug}-ru.html"}
             (ROOT / "sources" / f"{slug}{suffix}.html").write_text(page_html(lang, source_rows, researched_at, title_override=title, subtitle_override=subtitle, extra_note=note, source_status={name: note}, show_source_links=True, source_prefix="../", active_source=slug, lang_links_override=lang_override), encoding="utf-8")
     (ROOT / "delacau_200_weather_31may2026.md").write_text(markdown(accuweather_rows, researched_at), encoding="utf-8")
