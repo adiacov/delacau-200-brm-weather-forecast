@@ -520,9 +520,9 @@ def page_html(lang, rows_by_duration, researched_at, root=False, title_override=
         html.append(f'<div class="card"><div class="label">{escape(label)}</div><div class="value">{escape(value)}</div></div>')
     html.append('</div>')
     html.append(f'<div class="update-info"><p class="auto-update">{escape(t["auto_update"])}</p><div class="meta research-meta"><span class="pill updated">{escape(t["last"])}: <b>{escape(updated)}</b> {escape(t["updated_tz"])}</span></div></div></section>')
+    html.append(f'<section class="section"><h2>{escape(t["route_info"])}</h2><div class="note">{escape(gpx_note)}</div></section>')
     if show_source_links:
         html.append(source_links_html(lang, source_prefix, active_source))
-    html.append(f'<section class="section"><h2>{escape(t["route_info"])}</h2><div class="note">{escape(gpx_note)}</div></section>')
 
     for duration, rows in rows_by_duration.items():
         html.append(f'<section class="scenario"><h3>{escape(t["scenario"])}: {escape(t["finish"])} {duration} {escape(t["hours"])} (06:00–{START_HOUR+duration:02d}:00)</h3>')
