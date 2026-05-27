@@ -139,7 +139,6 @@ td:first-child{font-weight:850;color:var(--text)}
 .status.warn{background:var(--warn-bg);color:var(--warn-text)}
 .sources{font-size:14px;color:var(--muted);background:transparent}
 .sources ul{padding-left:20px}.sources li{margin:7px 0}.sources b{color:var(--text)}
-.footer{margin:34px 0 10px;color:var(--muted2);font-size:13px;text-align:center}
 .cards-mobile{display:none}
 @media (max-width:760px){
   body{font-size:15px}.page{padding:12px}.hero{padding:18px;border-radius:22px}.controls{width:100%;justify-content:flex-end}h1{margin-top:16px}.meta{gap:8px}.summary{grid-template-columns:1fr 1fr;gap:10px}.card{padding:14px}.card .value{font-size:20px}.section{margin-top:24px}.source-section{padding:15px}.source-links{display:grid;grid-template-columns:1fr 1fr;gap:9px}.source-links a{text-align:center;padding:11px 8px}.scenario{border-radius:20px;margin:15px 0}.scenario h3{padding:15px;font-size:18px}.table-wrap{display:none}.cards-mobile{display:grid;gap:10px;padding:12px}.hour-card{border:1px solid var(--line);border-radius:17px;padding:14px;background:var(--surface-soft);box-shadow:var(--soft-shadow)}.hour-card:nth-child(even){background:var(--surface)}.hour-card .time{font-weight:850;font-size:16px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}.hour-card .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin-top:11px;font-size:14px}.hour-card .grid div{color:var(--muted)}.hour-card .grid b{color:var(--text)}.hour-card .advice{margin-top:11px;color:var(--muted);padding-top:10px;border-top:1px dashed var(--line)}

@@ -551,7 +551,7 @@ def page_html(lang, rows_by_duration, researched_at, root=False, title_override=
     html.append(f'<section class="section sources"><h2>{escape(t["sources"])}</h2><p>{escape(t["sources_note"])}</p><ul>')
     for k, v in (source_status or PLATFORM_STATUS).items():
         html.append(f'<li><b>{escape(k)}</b>: {escape(v)}</li>')
-    html.append(f'</ul><p>{escape(t["disclaimer"])}</p></section><p class="footer">Delacau 200 BRM weather forecast · static GitHub Pages project</p></main></body></html>')
+    html.append(f'</ul><p>{escape(t["disclaimer"])}</p></section></main></body></html>')
     return "\n".join(html)
 
 
