@@ -510,7 +510,7 @@ def source_links_html(lang, prefix="", active="accuweather"):
     for slug, name in SOURCES.items():
         suffix = "" if lang == "ro" else f"-{lang}"
         cls = ' class="active"' if active == slug else ""
-        html.append(f'<a{cls} href="{prefix}sources/{slug}{suffix}.html">{escape(name)}</a>')
+        html.append(f'<a{cls} data-source-link href="{prefix}sources/{slug}{suffix}.html">{escape(name)}</a>')
     html.append('</div></details>')
     return "\n".join(html)
 
@@ -552,7 +552,7 @@ def page_html(lang, rows_by_duration, researched_at, root=False, title_override=
     for duration, rows in rows_by_duration.items():
         map_href = f'{map_prefix}{active_source}.html?scenario={duration}&back={urllib.parse.quote(map_back, safe="/.")}'
         scenario_title = f'{escape(t["scenario"])}: {escape(t["finish"])} {duration} {escape(t["hours"])} (06:00–{START_HOUR+duration:02d}:00)'
-        html.append(f'<details class="scenario"><summary class="scenario-head"><h3>{scenario_title}</h3><a class="map-button" href="{map_href}" onclick="event.stopPropagation()">{escape(t["map"])}</a></summary>')
+        html.append(f'<details class="scenario" id="scenario-{duration}" data-scenario="{duration}"><summary class="scenario-head"><h3>{scenario_title}</h3><a class="map-button" href="{map_href}" onclick="event.stopPropagation()">{escape(t["map"])}</a></summary>')
         html.append('<div class="table-wrap"><table><thead><tr>')
         for head in [t["time"], t["km"], t["sector"], t["temp"], t["rain"], t["wind_dir"], t["wind"], t["advice"]]:
             html.append(f'<th>{escape(head)}</th>')
