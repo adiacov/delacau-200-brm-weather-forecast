@@ -92,12 +92,9 @@ PLATFORM_STATUS = {
 }
 
 SOURCES = {
-    "accuweather": "AccuWeather",
     "ecmwf": "ECMWF",
     "icon": "ICON",
-    "met-norway": "MET Norway / Yr",
-    "7timer": "7Timer Civil",
-    "weather-forecast": "Weather-Forecast.com",
+    "accuweather": "AccuWeather",
 }
 
 
@@ -702,16 +699,10 @@ def markdown(rows_by_duration, researched_at):
 
 def main():
     researched_at = datetime.now(TZ)
-    met = fetch_metno()
-    sev = fetch_7timer()
     ecmwf = fetch_openmeteo_model("ecmwf_ifs025", "ECMWF")
     icon = fetch_openmeteo_model("icon_seamless", "ICON")
-    wf = fetch_weatherforecast_day_forecast()
-    met_rows = build_rows(met, {})
     ecmwf_rows = build_rows(ecmwf, {})
     icon_rows = build_rows(icon, {})
-    sev_rows = build_rows({}, sev)
-    wf_rows = build_rows_from_periods(wf)
     accu = fetch_accuweather_day_forecast()
     accuweather_rows = build_rows_from_accuweather(accu)
 
@@ -723,22 +714,19 @@ def main():
     (ROOT / "assets").mkdir(exist_ok=True)
 
     source_configs = {
-        "accuweather": ("AccuWeather", accuweather_rows, "AccuWeather public day/night forecast only; values are applied to estimated route positions."),
         "ecmwf": ("ECMWF", ecmwf_rows, "ECMWF IFS hourly model forecast from Open-Meteo only."),
         "icon": ("ICON", icon_rows, "ICON hourly model forecast from Open-Meteo only."),
-        "met-norway": ("MET Norway / Yr", met_rows, "Hourly point forecast from MET Norway / Yr only."),
-        "7timer": ("7Timer Civil", sev_rows, "3-hourly forecast from 7Timer only; values are matched to the nearest hour."),
-        "weather-forecast": ("Weather-Forecast.com", wf_rows, "3-period Chisinau forecast from Weather-Forecast.com only; values are applied to estimated route positions."),
+        "accuweather": ("AccuWeather", accuweather_rows, "AccuWeather public day/night forecast only; values are applied to estimated route positions."),
     }
     default_note = {
-        "ro": "Pagina implicita foloseste AccuWeather. Poti schimba sursa meteo din butoanele de mai jos.",
-        "en": "Default page uses AccuWeather. You can switch the weather source using the buttons below.",
-        "ru": "Страница по умолчанию использует AccuWeather. Источник погоды можно переключить кнопками ниже.",
+        "ro": "Pagina implicita foloseste ECMWF. Poti schimba sursa meteo din butoanele de mai jos.",
+        "en": "Default page uses ECMWF. You can switch the weather source using the buttons below.",
+        "ru": "Страница по умолчанию использует ECMWF. Источник погоды можно переключить кнопками ниже.",
     }
-    (ROOT / "index.html").write_text(page_html("ro", accuweather_rows, researched_at, root=True, title_override="Prognoza meteo pentru Delacau 200 BRM", subtitle_override="Prognoza pe traseu pentru 31 mai 2026 · Scenarii: 8h / 10h / 13h", extra_note=default_note["ro"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, active_source="accuweather", map_prefix="maps/", map_back="../index.html"), encoding="utf-8")
-    (ROOT / "ro" / "index.html").write_text(page_html("ro", accuweather_rows, researched_at, title_override="Prognoza meteo pentru Delacau 200 BRM", subtitle_override="Prognoza pe traseu pentru 31 mai 2026 · Scenarii: 8h / 10h / 13h", extra_note=default_note["ro"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, source_prefix="../", active_source="accuweather", map_prefix="../maps/", map_back="../ro/index.html"), encoding="utf-8")
-    (ROOT / "en" / "index.html").write_text(page_html("en", accuweather_rows, researched_at, title_override="Weather forecast for Delacau 200 BRM", subtitle_override="Route forecast for 31 May 2026 · Scenarios: 8h / 10h / 13h", extra_note=default_note["en"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, source_prefix="../", active_source="accuweather", map_prefix="../maps/", map_back="../en/index.html"), encoding="utf-8")
-    (ROOT / "ru" / "index.html").write_text(page_html("ru", accuweather_rows, researched_at, title_override="Прогноз погоды для Delacau 200 BRM", subtitle_override="Прогноз по маршруту на 31 мая 2026 · Сценарии: 8ч / 10ч / 13ч", extra_note=default_note["ru"], source_status={"AccuWeather": source_configs["accuweather"][2]}, show_source_links=True, source_prefix="../", active_source="accuweather", map_prefix="../maps/", map_back="../ru/index.html"), encoding="utf-8")
+    (ROOT / "index.html").write_text(page_html("ro", ecmwf_rows, researched_at, root=True, title_override="Prognoza meteo pentru Delacau 200 BRM", subtitle_override="Prognoza pe traseu pentru 31 mai 2026 · Scenarii: 8h / 10h / 13h", extra_note=default_note["ro"], source_status={"ECMWF": source_configs["ecmwf"][2]}, show_source_links=True, active_source="ecmwf", map_prefix="maps/", map_back="../index.html"), encoding="utf-8")
+    (ROOT / "ro" / "index.html").write_text(page_html("ro", ecmwf_rows, researched_at, title_override="Prognoza meteo pentru Delacau 200 BRM", subtitle_override="Prognoza pe traseu pentru 31 mai 2026 · Scenarii: 8h / 10h / 13h", extra_note=default_note["ro"], source_status={"ECMWF": source_configs["ecmwf"][2]}, show_source_links=True, source_prefix="../", active_source="ecmwf", map_prefix="../maps/", map_back="../ro/index.html"), encoding="utf-8")
+    (ROOT / "en" / "index.html").write_text(page_html("en", ecmwf_rows, researched_at, title_override="Weather forecast for Delacau 200 BRM", subtitle_override="Route forecast for 31 May 2026 · Scenarios: 8h / 10h / 13h", extra_note=default_note["en"], source_status={"ECMWF": source_configs["ecmwf"][2]}, show_source_links=True, source_prefix="../", active_source="ecmwf", map_prefix="../maps/", map_back="../en/index.html"), encoding="utf-8")
+    (ROOT / "ru" / "index.html").write_text(page_html("ru", ecmwf_rows, researched_at, title_override="Прогноз погоды для Delacau 200 BRM", subtitle_override="Прогноз по маршруту на 31 мая 2026 · Сценарии: 8ч / 10ч / 13ч", extra_note=default_note["ru"], source_status={"ECMWF": source_configs["ecmwf"][2]}, show_source_links=True, source_prefix="../", active_source="ecmwf", map_prefix="../maps/", map_back="../ru/index.html"), encoding="utf-8")
 
     for slug, (name, source_rows, note) in source_configs.items():
         for lang in ["ro", "en", "ru"]:
