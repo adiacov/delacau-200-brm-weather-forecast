@@ -496,6 +496,48 @@ def fmt_num(x, suffix=""):
     return "—" if x is None else f"{x:.0f}{suffix}"
 
 
+def weather_kind(row):
+    condition = (row.get("condition") or "").lower()
+    rain = row.get("rain") or 0
+    if "thunder" in condition or "tstorm" in condition:
+        return "storm"
+    if rain >= 0.1 or "rain" in condition or "shower" in condition:
+        return "rain"
+    if "fog" in condition or "mist" in condition:
+        return "fog"
+    if "snow" in condition:
+        return "snow"
+    if "sun" in condition or "clear" in condition:
+        return "clear"
+    if "partly" in condition or "few" in condition:
+        return "partly"
+    if "cloud" in condition or "overcast" in condition or "model forecast" in condition:
+        return "cloudy"
+    return "dry"
+
+
+def weather_icon(row):
+    return {
+        "storm": "⛈️",
+        "rain": "🌧️",
+        "fog": "🌫️",
+        "snow": "❄️",
+        "clear": "☀️",
+        "partly": "🌤️",
+        "cloudy": "☁️",
+        "dry": "🌤️",
+    }[weather_kind(row)]
+
+
+def weather_label(row, lang):
+    labels = {
+        "ro": {"storm": "furtuna", "rain": "ploaie posibila", "fog": "ceata", "snow": "ninsoare", "clear": "senin", "partly": "partial noros", "cloudy": "noros", "dry": "uscat"},
+        "en": {"storm": "storm", "rain": "rain possible", "fog": "fog", "snow": "snow", "clear": "clear", "partly": "partly cloudy", "cloudy": "cloudy", "dry": "dry"},
+        "ru": {"storm": "гроза", "rain": "возможен дождь", "fog": "туман", "snow": "снег", "clear": "ясно", "partly": "переменная облачность", "cloudy": "облачно", "dry": "сухо"},
+    }
+    return labels[lang][weather_kind(row)]
+
+
 def lang_links(current):
     links = {"ro": "../ro/index.html", "en": "../en/index.html", "ru": "../ru/index.html"}
     if current == "root":
@@ -554,7 +596,7 @@ def page_html(lang, rows_by_duration, researched_at, root=False, title_override=
         scenario_title = f'{escape(t["scenario"])}: {escape(t["finish"])} {duration} {escape(t["hours"])} (06:00–{START_HOUR+duration:02d}:00)'
         html.append(f'<details class="scenario" id="scenario-{duration}" data-scenario="{duration}"><summary class="scenario-head"><h3>{scenario_title}</h3><a class="map-button" href="{map_href}" onclick="event.stopPropagation()">{escape(t["map"])}</a></summary>')
         html.append('<div class="table-wrap"><table><thead><tr>')
-        for head in [t["time"], t["km"], t["sector"], t["temp"], t["rain"], t["wind_dir"], t["wind"], t["advice"]]:
+        for head in [t["time"], t["km"], t["sector"], t["weather"], t["temp"], t["rain"], t["wind_dir"], t["wind"]]:
             html.append(f'<th>{escape(head)}</th>')
         html.append('</tr></thead><tbody>')
         cards_mobile = ['<div class="cards-mobile">']
@@ -568,8 +610,9 @@ def page_html(lang, rows_by_duration, researched_at, root=False, title_override=
             wind_max = fmt_num(r["wind_max"])
             wind_dir = escape(r["wind_dir"])
             wind_speed = f'{wind} {escape(t["wind_avg"])} / {wind_max} {escape(t["wind_max"])}'
-            html.append(f'<tr><td><b>{r["time"]}</b></td><td>{r["km"]}</td><td>{escape(r["place"])}</td><td>{temp}</td><td>{rain}</td><td><b>{wind_dir}</b></td><td>{wind_speed}</td><td><span class="status {status_cls}">{escape(status)}</span> {escape(advice)}</td></tr>')
-            cards_mobile.append(f'<div class="hour-card"><div class="time">{r["time"]} · {r["km"]} km · <span class="status {status_cls}">{escape(status)}</span></div><div class="grid"><div>{escape(t["sector"])}: <b>{escape(r["place"])}</b></div><div>{escape(t["temp"])}: <b>{temp}</b></div><div>{escape(t["rain"])}: <b>{rain}</b></div><div>{escape(t["wind_dir"])}: <b>{wind_dir}</b></div><div>{escape(t["wind"])}: <b>{wind_speed}</b></div></div><div class="advice">{escape(advice)}</div></div>')
+            weather = f'{weather_icon(r)} {escape(weather_label(r, lang))}'
+            html.append(f'<tr><td><b>{r["time"]}</b></td><td>{r["km"]}</td><td>{escape(r["place"])}</td><td><span class="weather-cell">{weather}</span></td><td>{temp}</td><td>{rain}</td><td><b>{wind_dir}</b></td><td>{wind_speed}</td></tr>')
+            cards_mobile.append(f'<div class="hour-card"><div class="time">{r["time"]} · {r["km"]} km · <span class="weather-cell">{weather}</span></div><div class="grid"><div>{escape(t["sector"])}: <b>{escape(r["place"])}</b></div><div>{escape(t["temp"])}: <b>{temp}</b></div><div>{escape(t["rain"])}: <b>{rain}</b></div><div>{escape(t["wind_dir"])}: <b>{wind_dir}</b></div><div>{escape(t["wind"])}: <b>{wind_speed}</b></div></div></div>')
         html.append('</tbody></table></div>')
         cards_mobile.append('</div>')
         html.extend(cards_mobile)
@@ -600,6 +643,8 @@ def map_data(source_slug, source_name, rows_by_duration, researched_at):
                 "wind_max": None if r["wind_max"] is None else round(r["wind_max"]),
                 "wind_dir": r["wind_dir"] or "—",
                 "condition": r["condition"],
+                "weather_icon": weather_icon(r),
+                "weather_label": weather_label(r, "en"),
                 "caution": bool(r["caution"]),
             })
         scenarios[str(duration)] = scenario_rows

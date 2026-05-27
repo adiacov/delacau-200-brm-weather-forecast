@@ -177,8 +177,9 @@
 
   function popupHtml(row) {
     return `<div class="weather-popup">
-      <b>${escapeHtml(row.time)} · km ${escapeHtml(row.km)}</b><br>
+      <b>${escapeHtml(row.weather_icon || '')} ${escapeHtml(row.time)} · km ${escapeHtml(row.km)}</b><br>
       ${escapeHtml(row.place)}<br>
+      Weather: <b>${escapeHtml(row.weather_label || row.condition || '—')}</b><br>
       Temperature: <b>${fmt(row.temp, '°C')}</b><br>
       Rain: <b>${fmt(row.rain, ' mm')}</b><br>
       Wind: <b><span class="popup-wind-arrow">${windArrow(row.wind_dir)}</span> ${windText(row)}</b><br>
