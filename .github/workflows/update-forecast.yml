@@ -2,8 +2,9 @@ name: Update weather forecast
 
 on:
   schedule:
-    # 06:00 Moldova time during summer time (UTC+3)
-    - cron: "0 3 * * *"
+    # Around 06:00 Moldova time during summer time (UTC+3).
+    # Avoid minute 0 because GitHub scheduled jobs are often delayed/dropped at peak times.
+    - cron: "12 3 * * *"
   workflow_dispatch:
 
 permissions:
