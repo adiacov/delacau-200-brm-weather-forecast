@@ -523,8 +523,6 @@ def page_html(lang, rows_by_duration, researched_at, root=False, title_override=
     html.append('</div></section>')
     if show_source_links:
         html.append(source_links_html(lang, source_prefix, active_source))
-        if extra_note:
-            html.append(f'<div class="provider-note">{escape(extra_note)}</div>')
     html.append(f'<section class="section"><h2>{escape(t["route_info"])}</h2><div class="note">{escape(gpx_note)}</div></section>')
 
     for duration, rows in rows_by_duration.items():
