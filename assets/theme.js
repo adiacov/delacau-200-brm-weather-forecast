@@ -22,6 +22,7 @@
 
   applyTheme(currentTheme());
 
+
   if (button) {
     button.addEventListener('click', () => {
       const next = root.dataset.theme === 'dark' ? 'light' : 'dark';

@@ -504,13 +504,14 @@ def lang_links(current):
 
 
 def source_links_html(lang, prefix="", active="accuweather"):
-    labels = {"ro": "Alege sursa meteo", "en": "Choose weather source", "ru": "Выберите источник погоды"}
-    html = [f'<section class="section source-section"><h2>{escape(labels[lang])}</h2><div class="source-links">']
+    labels = {"ro": "Sursa meteo", "en": "Weather source", "ru": "Источник погоды"}
+    active_name = SOURCES.get(active, "AccuWeather")
+    html = [f'<details class="section source-section source-collapsible"><summary><h2>{escape(labels[lang])}</h2><span class="active-source-pill">{escape(active_name)}</span></summary><div class="source-links">']
     for slug, name in SOURCES.items():
         suffix = "" if lang == "ro" else f"-{lang}"
         cls = ' class="active"' if active == slug else ""
         html.append(f'<a{cls} href="{prefix}sources/{slug}{suffix}.html">{escape(name)}</a>')
-    html.append('</div></section>')
+    html.append('</div></details>')
     return "\n".join(html)
 
 
@@ -551,7 +552,7 @@ def page_html(lang, rows_by_duration, researched_at, root=False, title_override=
     for duration, rows in rows_by_duration.items():
         map_href = f'{map_prefix}{active_source}.html?scenario={duration}&back={urllib.parse.quote(map_back, safe="/.")}'
         scenario_title = f'{escape(t["scenario"])}: {escape(t["finish"])} {duration} {escape(t["hours"])} (06:00–{START_HOUR+duration:02d}:00)'
-        html.append(f'<section class="scenario"><div class="scenario-head"><h3>{scenario_title}</h3><a class="map-button" href="{map_href}">{escape(t["map"])}</a></div>')
+        html.append(f'<details class="scenario"><summary class="scenario-head"><h3>{scenario_title}</h3><a class="map-button" href="{map_href}" onclick="event.stopPropagation()">{escape(t["map"])}</a></summary>')
         html.append('<div class="table-wrap"><table><thead><tr>')
         for head in [t["time"], t["km"], t["sector"], t["temp"], t["rain"], t["wind_dir"], t["wind"], t["advice"]]:
             html.append(f'<th>{escape(head)}</th>')
@@ -572,7 +573,7 @@ def page_html(lang, rows_by_duration, researched_at, root=False, title_override=
         html.append('</tbody></table></div>')
         cards_mobile.append('</div>')
         html.extend(cards_mobile)
-        html.append('</section>')
+        html.append('</details>')
 
     html.append(f'<section class="section sources"><h2>{escape(t["sources"])}</h2><p>{escape(t["sources_note"])}</p><ul>')
     for k, v in (source_status or PLATFORM_STATUS).items():
