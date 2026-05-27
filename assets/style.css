@@ -127,8 +127,9 @@ table{width:100%;border-collapse:separate;border-spacing:0;min-width:900px}
 th,td{text-align:left;border-bottom:1px solid var(--line);padding:13px 11px;vertical-align:middle;font-size:14px}
 th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted2);background:var(--surface-soft);position:sticky;top:0;z-index:1}
 tbody tr:nth-child(even){background:var(--surface-soft)}
-:root[data-theme="dark"] tbody tr:nth-child(even){background:#172235}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) tbody tr:nth-child(even){background:#172235}}
+:root[data-theme="dark"] tbody tr:nth-child(even){background:#1d2c44}
+:root[data-theme="dark"] tbody tr:nth-child(odd){background:#111827}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) tbody tr:nth-child(even){background:#1d2c44}:root:not([data-theme="light"]) tbody tr:nth-child(odd){background:#111827}}
 tbody tr:hover{background:var(--accent-soft)}
 td:first-child{font-weight:850;color:var(--text)}
 .status{display:inline-block;border-radius:999px;padding:4px 9px;font-size:12px;font-weight:850;white-space:nowrap}
