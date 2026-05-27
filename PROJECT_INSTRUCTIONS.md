@@ -48,8 +48,6 @@ The audience is cyclists, not developers. The page must answer:
   - `sources/met-norway.html`, `sources/met-norway-en.html`, `sources/met-norway-ru.html`
   - `sources/7timer.html`, `sources/7timer-en.html`, `sources/7timer-ru.html`
   - `sources/weather-forecast.html`, `sources/weather-forecast-en.html`, `sources/weather-forecast-ru.html`
-  - `delacau_200_weather_31may2026.html`
-  - `delacau_200_weather_31may2026.md`
 
 ## How the generator works
 
