@@ -61,6 +61,11 @@
     return value === null || value === undefined ? '—' : `${value}${suffix}`;
   }
 
+  function windArrow(dir) {
+    // Keep the arrow visually aligned with the compass label shown by the forecast.
+    return { N: '↑', NE: '↗', E: '→', SE: '↘', S: '↓', SW: '↙', W: '←', NW: '↖' }[dir] || '·';
+  }
+
   function windText(row) {
     return `${escapeHtml(row.wind_dir || '—')}, ${fmt(row.wind)} avg / ${fmt(row.wind_max)} max km/h`;
   }
@@ -160,12 +165,13 @@
   function markerIcon(row, compact) {
     const cls = row.caution ? 'warn' : 'ok';
     const temp = fmt(row.temp, '°');
+    const arrow = windArrow(row.wind_dir);
     return L.divIcon({
       className: `weather-marker ${cls} ${compact ? 'compact' : ''}`,
-      html: `<div class="wm"><span>${escapeHtml(row.time)}</span></div>`,
-      iconSize: compact ? [48, 34] : [56, 38],
-      iconAnchor: compact ? [24, 34] : [28, 38],
-      popupAnchor: [0, -42]
+      html: `<div class="wm"><span>${escapeHtml(row.time)}</span><strong>${temp} <em>${arrow}</em></strong></div>`,
+      iconSize: compact ? [54, 42] : [62, 48],
+      iconAnchor: compact ? [27, 42] : [31, 48],
+      popupAnchor: [0, -46]
     });
   }
 
@@ -175,7 +181,7 @@
       ${escapeHtml(row.place)}<br>
       Temperature: <b>${fmt(row.temp, '°C')}</b><br>
       Rain: <b>${fmt(row.rain, ' mm')}</b><br>
-      Wind: <b>${windText(row)}</b><br>
+      Wind: <b><span class="popup-wind-arrow">${windArrow(row.wind_dir)}</span> ${windText(row)}</b><br>
       ${row.caution ? '<span class="status warn">Caution</span> Keep a light rain shell accessible' : '<span class="status ok">Dry</span> Mostly dry'}
     </div>`;
   }
