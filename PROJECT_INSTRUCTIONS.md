@@ -42,6 +42,8 @@ The audience is cyclists, not developers. The page must answer:
   - `en/index.html`
   - `ru/index.html`
   - `sources/accuweather.html`, `sources/accuweather-en.html`, `sources/accuweather-ru.html`
+  - `sources/ecmwf.html`, `sources/ecmwf-en.html`, `sources/ecmwf-ru.html`
+  - `sources/icon.html`, `sources/icon-en.html`, `sources/icon-ru.html`
   - `sources/met-norway.html`, `sources/met-norway-en.html`, `sources/met-norway-ru.html`
   - `sources/7timer.html`, `sources/7timer-en.html`, `sources/7timer-ru.html`
   - `sources/weather-forecast.html`, `sources/weather-forecast-en.html`, `sources/weather-forecast-ru.html`
@@ -53,12 +55,14 @@ The audience is cyclists, not developers. The page must answer:
 1. Reads the GPX route.
 2. For each finish scenario — 8h, 10h, 13h — estimates cyclist position every hour.
 3. Fetches weather from public sources with short timeouts.
-4. Generates separate provider pages for AccuWeather, MET Norway / Yr, 7Timer Civil and Weather-Forecast.com.
+4. Generates separate provider pages for AccuWeather, ECMWF, ICON, MET Norway / Yr, 7Timer Civil and Weather-Forecast.com.
 5. Generates Romanian, English and Russian versions.
 
 ## Provider behavior
 
 - AccuWeather: currently the default page; public page gives day/night forecast and gust/max wind.
+- ECMWF: hourly model forecast from Open-Meteo.
+- ICON: hourly model forecast from Open-Meteo.
 - MET Norway / Yr: useful hourly point source; may not always expose gust/max wind.
 - 7Timer Civil: 3-hourly source; no true max/gust wind.
 - Weather-Forecast.com: broad Chisinau 3-period forecast; no true max/gust wind.
@@ -84,7 +88,7 @@ Then review the generated page locally before committing, especially:
 - `Last researched` time
 - 8h / 10h / 13h scenario rows
 - all language pages still render
-- provider source buttons work and AccuWeather is first
+- provider source buttons work and order is AccuWeather, ECMWF, ICON, then the rest
 - no combined/average forecast appears
 - no invented max/gust wind values; use `— max` when unavailable
 - for UI changes, compare before/after with `git diff` and open the local page in a browser
