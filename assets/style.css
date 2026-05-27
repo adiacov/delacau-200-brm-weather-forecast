@@ -99,6 +99,7 @@ body{margin:0;background:radial-gradient(circle at 18% 0,var(--bg-soft),transpar
 h1{font-size:clamp(30px,4.7vw,48px);line-height:1.04;margin:20px 0 8px;letter-spacing:-.045em;max-width:900px}
 .subtitle{font-size:clamp(15px,2.1vw,18px);color:var(--muted);margin:0;max-width:850px}
 .meta{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0 16px}
+.research-meta{margin:14px 0 0}
 .pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);font-size:13px;color:var(--muted);box-shadow:var(--soft-shadow)}
 .pill b{color:var(--text)}
 .updated{background:var(--amber-bg);border-color:var(--amber-border);color:var(--warn-text)}

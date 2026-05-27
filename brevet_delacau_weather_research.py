@@ -42,7 +42,7 @@ TEXT = {
         "lang_name": "Romana", "html_lang": "ro", "dir": "ltr", "active": "RO",
         "title": "Vremea pe traseu pentru Delacau 200 BRM",
         "subtitle": "Prognoza ora cu ora pentru 31 mai 2026 · Start: 06:00 · Scenarii: 8h / 10h / 13h",
-        "last": "Ultima cercetare", "forecast_for": "Prognoza pentru", "start": "Start", "route": "Ruta", "distance": "Distanta", "elevation_gain": "Urcare totala", "auto_update": "Pagina este planificata sa se actualizeze zilnic in jurul orei 06:00, ora Moldovei.",
+        "last": "Ultima actualizare a prognozei", "forecast_for": "Prognoza pentru", "start": "Start", "route": "Ruta", "distance": "Distanta", "elevation_gain": "Urcare totala", "auto_update": "Pagina este planificata sa se actualizeze zilnic in jurul orei 06:00, ora Moldovei.",
         "summary": "Concluzie pe scurt", "overall": "General", "temp": "Temperatura, °C", "wind": "Vant, km/h", "wind_avg": "mediu", "wind_max": "max", "wind_dir": "Directie vant", "rain": "Ploaie, mm",
         "route_info": "Cum se citeste prognoza", "route_note": "Alege scenariul cel mai apropiat de timpul tau estimat de finish: 8h, 10h sau 13h. Pentru fiecare ora vezi kilometrul aproximativ si vremea probabila in acea zona. Daca ritmul tau difera, foloseste kilometrul aproximativ ca reper.",
         "scenario": "Scenariu", "finish": "finisare in", "time": "Ora", "km": "Km aprox.", "sector": "Zona traseului", "weather": "Vreme", "advice": "Recomandare",
@@ -56,7 +56,7 @@ TEXT = {
         "lang_name": "English", "html_lang": "en", "dir": "ltr", "active": "EN",
         "title": "Weather on the route for Delacau 200 BRM",
         "subtitle": "Hour-by-hour forecast for 31 May 2026 · Start: 06:00 · Scenarios: 8h / 10h / 13h",
-        "last": "Last researched", "forecast_for": "Forecast for", "start": "Start", "route": "Route", "distance": "Distance", "elevation_gain": "Elevation gain", "auto_update": "This page is scheduled to update daily around 06:00 Moldova time.",
+        "last": "Forecast last updated", "forecast_for": "Forecast for", "start": "Start", "route": "Route", "distance": "Distance", "elevation_gain": "Elevation gain", "auto_update": "This page is scheduled to update daily around 06:00 Moldova time.",
         "summary": "Short conclusion", "overall": "Overall", "temp": "Temperature, °C", "wind": "Wind, km/h", "wind_avg": "avg", "wind_max": "max", "wind_dir": "Wind direction", "rain": "Rain, mm",
         "route_info": "How to read this forecast", "route_note": "Choose the scenario closest to your estimated finish time: 8h, 10h or 13h. For each hour you see the approximate kilometer and the likely weather in that area. If your pace is different, use the approximate kilometer as your reference.",
         "scenario": "Scenario", "finish": "finish in", "time": "Time", "km": "Approx km", "sector": "Route area", "weather": "Weather", "advice": "Advice",
@@ -70,7 +70,7 @@ TEXT = {
         "lang_name": "Русский", "html_lang": "ru", "dir": "ltr", "active": "RU",
         "title": "Погода на маршруте Delacau 200 BRM",
         "subtitle": "Почасовой прогноз на 31 мая 2026 · Старт: 06:00 · Сценарии: 8ч / 10ч / 13ч",
-        "last": "Последнее обновление", "forecast_for": "Прогноз на", "start": "Старт", "route": "Маршрут", "distance": "Дистанция", "elevation_gain": "Набор высоты", "auto_update": "Страница запланирована к ежедневному обновлению около 06:00 по времени Молдовы.",
+        "last": "Прогноз обновлен", "forecast_for": "Прогноз на", "start": "Старт", "route": "Маршрут", "distance": "Дистанция", "elevation_gain": "Набор высоты", "auto_update": "Страница запланирована к ежедневному обновлению около 06:00 по времени Молдовы.",
         "summary": "Краткий вывод", "overall": "В целом", "temp": "Температура, °C", "wind": "Ветер, км/ч", "wind_avg": "ср.", "wind_max": "макс.", "wind_dir": "Направление ветра", "rain": "Дождь, мм",
         "route_info": "Как читать этот прогноз", "route_note": "Выберите сценарий, который ближе всего к вашему ожидаемому времени финиша: 8ч, 10ч или 13ч. Для каждого часа указан примерный километр и ожидаемая погода в этой зоне. Если ваш темп отличается, ориентируйтесь по примерному километру.",
         "scenario": "Сценарий", "finish": "финиш за", "time": "Время", "km": "Км прибл.", "sector": "Участок маршрута", "weather": "Погода", "advice": "Совет",
@@ -511,7 +511,6 @@ def page_html(lang, rows_by_duration, researched_at, root=False, title_override=
     html.append('<button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch theme">🌙</button></div></div>')
     html.append(f'<h1>{escape(page_title)}</h1><p class="subtitle">{escape(page_subtitle)}</p>')
     html.append('<div class="meta">')
-    html.append(f'<span class="pill updated">{escape(t["last"])}: <b>{escape(updated)}</b> {escape(t["updated_tz"])}</span>')
     html.append(f'<span class="pill">{escape(t["start"])}: <b>06:00, Chisinau</b></span><span class="pill">{escape(t["distance"])}: <b>200 km</b></span><span class="pill">{escape(t["elevation_gain"])}: <b>1887 m</b></span>')
     html.append('</div>')
     html.append(f'<p>{escape(conclusion_text)}</p>')
@@ -520,7 +519,8 @@ def page_html(lang, rows_by_duration, researched_at, root=False, title_override=
     cards = [(t["overall"], t["mostly_dry"]), (t["temp"], temp_range), (t["wind"], wind_avg), (t["rain"], "low" if lang == "en" else "mic" if lang == "ro" else "низкий")]
     for label, value in cards:
         html.append(f'<div class="card"><div class="label">{escape(label)}</div><div class="value">{escape(value)}</div></div>')
-    html.append('</div></section>')
+    html.append('</div>')
+    html.append(f'<div class="meta research-meta"><span class="pill updated">{escape(t["last"])}: <b>{escape(updated)}</b> {escape(t["updated_tz"])}</span></div></section>')
     if show_source_links:
         html.append(source_links_html(lang, source_prefix, active_source))
     html.append(f'<section class="section"><h2>{escape(t["route_info"])}</h2><div class="note">{escape(gpx_note)}</div></section>')
