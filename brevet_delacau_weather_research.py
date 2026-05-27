@@ -473,9 +473,9 @@ def fmt_num(x, suffix=""):
 
 
 def lang_links(current):
-    links = {"ro": "../ro/", "en": "../en/", "ru": "../ru/"}
+    links = {"ro": "../ro/index.html", "en": "../en/index.html", "ru": "../ru/index.html"}
     if current == "root":
-        links = {"ro": "ro/", "en": "en/", "ru": "ru/"}
+        links = {"ro": "ro/index.html", "en": "en/index.html", "ru": "ru/index.html"}
     return links
 
 
