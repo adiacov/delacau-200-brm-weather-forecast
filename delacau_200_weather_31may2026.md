@@ -1,6 +1,6 @@
 # Delacau 200 BRM weather forecast
 
-Last researched: 2026-05-27 07:56 Moldova time
+Last researched: 2026-05-27 08:00 Moldova time
 
 Most probable: good cycling weather, mostly dry. Expected temperature: 13–22°C. Wind: light to moderate, around 11 km/h on average. Rain risk looks low, but keep a light rain shell for an isolated shower.
 
