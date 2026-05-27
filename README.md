@@ -21,6 +21,7 @@ Public page:
   - Weather-Forecast.com
 - Each provider page shows only that provider's data.
 - If max/gust wind is unavailable from a provider, the page shows `— max` instead of inventing a value.
+- Each scenario can open an English interactive route map with route, checkpoints, weather markers, wind arrows and optional browser GPS location.
 
 ## What this project contains
 
@@ -29,9 +30,11 @@ Public page:
 - `en/index.html` — English page, AccuWeather
 - `ru/index.html` — Russian page, AccuWeather
 - `sources/` — provider-specific pages in Romanian, English and Russian; provider order starts with AccuWeather, ECMWF, ICON
+- `maps/` — generated English interactive map pages, one per provider
 - `assets/style.css` — shared mobile-first design, light/dark theme support
-- `assets/theme.js` — visible light/dark theme toggle
-- `delacau-200-brm.gpx` — route GPX used for hourly route-position estimates
+- `assets/theme.js` — visible light/dark theme toggle and collapsed-section behavior
+- `assets/map.js` — reusable Leaflet map behavior, weather markers, wind arrows and browser GPS location
+- `delacau-200-brm.gpx` — route GPX used for hourly route-position estimates and map route/waypoints
 - `brevet_delacau_weather_research.py` — generator script
 - `.github/workflows/update-forecast.yml` — daily automatic update around 06:00 Moldova time
 - `ANNOUNCEMENT.md` — Telegram announcement texts
@@ -45,7 +48,7 @@ This is for non-technical riders. The visible page should be simple, practical a
 
 ## Generated pages
 
-The HTML pages are generated output. For layout/content generation, update `brevet_delacau_weather_research.py` and regenerate the pages. For visual styling, update `assets/style.css`. For light/dark behavior, update `assets/theme.js`.
+The HTML pages are generated output. For layout/content generation, update `brevet_delacau_weather_research.py` and regenerate the pages. For visual styling, update `assets/style.css`. For light/dark/collapsed-section behavior, update `assets/theme.js`. For interactive map behavior, update `assets/map.js`.
 
 ## Updating the forecast
 
@@ -84,4 +87,4 @@ After GitHub builds the page, it should be available at:
 
 - Review and polish Romanian/Russian/English wording.
 - Update/add weather providers if better public sources are found.
-- Optionally add an interactive route map later.
+- Optionally improve the interactive map with route-kilometer estimation from live GPS.

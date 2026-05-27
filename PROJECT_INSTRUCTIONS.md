@@ -20,6 +20,7 @@ The audience is cyclists, not developers. The page must answer:
   - `en/index.html` — English, currently AccuWeather
   - `ru/index.html` — Russian, currently AccuWeather
 - Provider-specific pages live in `sources/`.
+- English-only provider map pages live in `maps/`; forecast pages may link to them from each scenario.
 - There is **no combined/average forecast anymore**. Do not reintroduce provider averaging unless the user explicitly asks.
 - Each provider page must show only data from that provider. If a provider does not return max/gust wind, show `— max`; do not invent it by copying average wind.
 - Keep the visible report rider-friendly.
@@ -33,7 +34,8 @@ The audience is cyclists, not developers. The page must answer:
 - `brevet_delacau_weather_research.py` — main generator script.
 - `delacau-200-brm.gpx` — route file used to estimate rider position by kilometer.
 - `assets/style.css` — shared responsive styling.
-- `assets/theme.js` — light/dark theme toggle.
+- `assets/theme.js` — light/dark theme toggle and collapsed-section/hash behavior.
+- `assets/map.js` — Leaflet map rendering, weather markers, wind arrows and optional browser GPS location.
 - `.github/workflows/update-forecast.yml` — daily GitHub Actions update at about 06:00 Moldova time.
 - `ANNOUNCEMENT.md` — Telegram announcement texts.
 - `LICENSE` — MIT license, copyright Alexandru Diacov.
@@ -48,6 +50,7 @@ The audience is cyclists, not developers. The page must answer:
   - `sources/met-norway.html`, `sources/met-norway-en.html`, `sources/met-norway-ru.html`
   - `sources/7timer.html`, `sources/7timer-en.html`, `sources/7timer-ru.html`
   - `sources/weather-forecast.html`, `sources/weather-forecast-en.html`, `sources/weather-forecast-ru.html`
+  - `maps/accuweather.html`, `maps/ecmwf.html`, `maps/icon.html`, `maps/met-norway.html`, `maps/7timer.html`, `maps/weather-forecast.html`
 
 ## How the generator works
 
@@ -56,7 +59,8 @@ The audience is cyclists, not developers. The page must answer:
 3. Fetches weather from public sources with short timeouts.
 4. Generates separate provider pages for AccuWeather, ECMWF, ICON, MET Norway / Yr, 7Timer Civil and Weather-Forecast.com.
 5. Generates Romanian, English and Russian versions.
-6. Rewrites the generated HTML/Markdown files; do not manually maintain generated HTML as the source of truth.
+6. Generates English map pages for each provider using the GPX route, GPX waypoints and provider-specific scenario rows.
+7. Rewrites the generated HTML/Markdown files; do not manually maintain generated HTML as the source of truth.
 
 ## Provider behavior
 
@@ -86,10 +90,11 @@ Then review the generated page locally before committing, especially:
 
 - top summary
 - forecast update timestamp and automatic update schedule
-- 8h / 10h / 13h scenario rows
+- 8h / 10h / 13h scenario rows and collapsed/open behavior
 - all language pages still render
 - reading guidance appears before weather-source selection
 - provider source buttons work and order is AccuWeather, ECMWF, ICON, then the rest
+- map pages load, scenario buttons work, wind arrows are visible, and browser location button does not break layout
 - no combined/average forecast appears
 - no invented max/gust wind values; use `— max` when unavailable
 - for UI changes, compare before/after with `git diff` and open the local page in a browser

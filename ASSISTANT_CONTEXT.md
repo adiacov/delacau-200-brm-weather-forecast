@@ -44,6 +44,8 @@ Provider pages are in `sources/`, each in RO/EN/RU:
 5. 7Timer Civil
 6. Weather-Forecast.com
 
+English-only interactive map pages are in `maps/`, one per provider. They use Leaflet from CDN, `assets/map.js`, full GPX route/waypoints, provider-specific scenario rows, wind arrows and optional browser GPS location.
+
 Navigation order must stay: **AccuWeather, ECMWF, ICON, then others**.
 
 ## Product rules
@@ -58,7 +60,8 @@ Navigation order must stay: **AccuWeather, ECMWF, ICON, then others**.
 - Route facts are shown as separate pills: start, distance, elevation gain.
 - Forecast update timestamp is grouped with the automatic update schedule near the bottom of the header.
 - `How to read this forecast` should appear before `Choose weather source`.
-- `Choose weather source` section should contain only provider buttons.
+- `Weather source` / provider section is collapsed by default and shows the active provider pill; expanded provider buttons must keep the order above.
+- Scenarios are collapsed by default; source switching preserves the currently open scenario via `#scenario-8/10/13`.
 - Keep language buttons visible on provider pages; active language must be visible in light and dark mode.
 - Use short network timeouts; do not repeatedly call failing APIs.
 - Commit and push after meaningful milestones.
@@ -86,6 +89,8 @@ Then review generated pages locally, especially:
 - language buttons
 - 8h / 10h / 13h sections
 - wind avg/max behavior
+- collapsed weather-source and scenario behavior
+- map pages, map buttons, wind arrows and optional location control
 - dark/light theme
 
 Then:
