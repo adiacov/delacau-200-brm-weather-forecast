@@ -23,7 +23,6 @@ FORECAST_DATE = "2026-05-31"
 START_HOUR = 6
 DISTANCE_KM = 200
 DURATIONS = [8, 10, 13]
-ASSET_VERSION = "teal-route-20260527"
 
 # Weather query points kept intentionally limited for short, reliable daily updates.
 # Actual cyclist position is taken from GPX; weather is sampled from nearest point below.
@@ -495,10 +494,10 @@ def page_html(lang, rows_by_duration, researched_at, root=False, title_override=
     t = TEXT[lang]
     links = lang_links_override or lang_links("root" if root else lang)
     conclusion_text, temp_range, wind_avg, total_rain = conclusion(rows_by_duration, lang)
-    css = ("assets/style.css" if root else "../assets/style.css") + f"?v={ASSET_VERSION}"
+    css = "assets/style.css" if root else "../assets/style.css"
     gpx_note = t["route_note"]
     updated = researched_at.strftime("%Y-%m-%d, %H:%M")
-    js = ("assets/theme.js" if root else "../assets/theme.js") + f"?v={ASSET_VERSION}"
+    js = "assets/theme.js" if root else "../assets/theme.js"
     page_title = title_override or t["title"]
     page_subtitle = subtitle_override or t["subtitle"]
     html = [f'<!doctype html><html lang="{t["html_lang"]}" dir="{t["dir"]}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(page_title)}</title><link rel="stylesheet" href="{css}"><script src="{js}" defer></script></head><body><main class="page">']
