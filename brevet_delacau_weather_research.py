@@ -354,39 +354,102 @@ def parse_accuweather_card(card_text):
     }
 
 
-def fetch_accuweather_day_forecast():
-    """Fetch AccuWeather day/night forecast for FORECAST_DATE.
+def accuweather_hour_to_24(hour_text, ampm):
+    hour = int(hour_text)
+    if ampm == "AM":
+        return 0 if hour == 12 else hour
+    return 12 if hour == 12 else hour + 12
 
-    AccuWeather's public page exposes day/night data, not full hourly data without an
-    API key. The `day` query parameter is relative to the current date, so it must be
+
+def parse_accuweather_hourly_card(card_text):
+    time_match = re.match(r'(\d+)\s+(AM|PM)\b', card_text)
+    if not time_match:
+        return None, None
+    hour = accuweather_hour_to_24(time_match.group(1), time_match.group(2))
+    temp = extract_number(r'(\d+)°', card_text)
+    wind_match = re.search(r'Wind\s+([A-Z]+)\s+(\d+)\s*km/h', card_text)
+    gust = extract_number(r'Wind Gusts\s+(\d+)\s*km/h', card_text)
+    probability = extract_number(r'LEARN MORE\s+(\d+)%', card_text, 0.0)
+    condition_match = re.search(r'Chevron down\s+(.+?)(?:\s+RealFeel Shade|\s+Wind\b)', card_text, re.I)
+    condition = condition_match.group(1) if condition_match else "forecast"
+    rain = 0.0 if probability < 50 and "shower" not in condition.lower() and "rain" not in condition.lower() else 0.3
+    return hour, {
+        "temp": temp,
+        "wind": float(wind_match.group(2)) if wind_match else None,
+        "wind_max": gust,
+        "wind_dir": wind_match.group(1) if wind_match else "—",
+        "rain": rain,
+        "condition": condition,
+        "precip_probability": probability,
+    }
+
+
+def fetch_accuweather_day_forecast():
+    """Fetch AccuWeather hourly forecast for FORECAST_DATE, with day/night fallback.
+
+    AccuWeather's `day` query parameter is relative to the current date, so it must be
     calculated on every run; a hard-coded value drifts to the wrong forecast date.
     """
     day_param = accuweather_day_param()
-    url = f"https://www.accuweather.com/en/md/centru/1702848/daily-weather-forecast/1702848?day={day_param}"
+    expected_date = date.fromisoformat(FORECAST_DATE)
+    expected_short_date = f"{expected_date.month}/{expected_date.day}"
+    hourly_url = f"https://www.accuweather.com/en/md/centru/1702848/hourly-weather-forecast/1702848?day={day_param}"
+    daily_url = f"https://www.accuweather.com/en/md/centru/1702848/daily-weather-forecast/1702848?day={day_param}"
+
     try:
-        text = get_text(url, timeout=20)
-        starts = [m.start() for m in re.finditer(r'<div class="half-day-card\s+content-module\s+"', text)]
-        cards = []
-        for i, start in enumerate(starts[:2]):
-            end = starts[i + 1] if i + 1 < len(starts) else text.find('<div class="panel-ad', start)
-            cards.append(strip_tags(text[start:end if end > start else len(text)]))
-        if len(cards) < 2:
-            return unavailable_accuweather(url, "could not find day/night forecast cards")
+        text = get_text(hourly_url, timeout=20)
+        starts = [m.start() for m in re.finditer(r'<div[^>]+data-qa="(\d+)"[^>]+class="accordion-item hour"', text)]
+        if len(starts) < 24:
+            return unavailable_accuweather(hourly_url, "could not find 24 hourly forecast cards")
+        first_epoch = int(re.search(r'<div[^>]+data-qa="(\d+)"[^>]+class="accordion-item hour"', text).group(1))
+        first_dt = datetime.fromtimestamp(first_epoch, timezone.utc).astimezone(TZ)
+        if first_dt.date() != expected_date:
+            return unavailable_accuweather(hourly_url, f"AccuWeather returned hourly date {first_dt.date()}, expected {FORECAST_DATE}")
 
-        expected_short_date = f"{date.fromisoformat(FORECAST_DATE).month}/{date.fromisoformat(FORECAST_DATE).day}"
-        if expected_short_date not in cards[0]:
-            return unavailable_accuweather(url, f"AccuWeather returned {cards[0][:40]!r}, expected {expected_short_date}")
+        hourly = {}
+        for i, start in enumerate(starts[:24]):
+            end = starts[i + 1] if i + 1 < len(starts) else text.find("footer", start)
+            hour, row = parse_accuweather_hourly_card(strip_tags(text[start:end if end > start else len(text)]))
+            if row is not None:
+                hourly[hour] = row
+        if len(hourly) < 24:
+            return unavailable_accuweather(hourly_url, "could not parse 24 hourly forecast cards")
 
+        day_rows = [row for hour, row in hourly.items() if 6 <= hour < 19]
+        night_rows = [row for hour, row in hourly.items() if hour < 6 or hour >= 19]
+        day = max(day_rows, key=lambda r: r["temp"] or -99)
+        night = min(night_rows, key=lambda r: r["temp"] or 99)
         forecast = {
-            "day": parse_accuweather_card(cards[0]),
-            "night": parse_accuweather_card(cards[1]),
-            "source_url": url,
-            "status": f"Day/night forecast for {expected_short_date} from {url}",
+            "hourly": hourly,
+            "day": day,
+            "night": night,
+            "source_url": hourly_url,
+            "status": f"Hourly forecast for {expected_short_date} from {hourly_url}",
         }
         PLATFORM_STATUS["AccuWeather"] = forecast["status"]
         return forecast
-    except Exception as exc:
-        return unavailable_accuweather(url, exc)
+    except Exception as hourly_exc:
+        try:
+            text = get_text(daily_url, timeout=20)
+            starts = [m.start() for m in re.finditer(r'<div class="half-day-card\s+content-module\s+"', text)]
+            cards = []
+            for i, start in enumerate(starts[:2]):
+                end = starts[i + 1] if i + 1 < len(starts) else text.find('<div class="panel-ad', start)
+                cards.append(strip_tags(text[start:end if end > start else len(text)]))
+            if len(cards) < 2:
+                return unavailable_accuweather(daily_url, f"hourly failed ({hourly_exc}); could not find day/night cards")
+            if expected_short_date not in cards[0]:
+                return unavailable_accuweather(daily_url, f"AccuWeather returned {cards[0][:40]!r}, expected {expected_short_date}")
+            forecast = {
+                "day": parse_accuweather_card(cards[0]),
+                "night": parse_accuweather_card(cards[1]),
+                "source_url": daily_url,
+                "status": f"Day/night forecast for {expected_short_date} from {daily_url}; hourly failed ({hourly_exc})",
+            }
+            PLATFORM_STATUS["AccuWeather"] = forecast["status"]
+            return forecast
+        except Exception as daily_exc:
+            return unavailable_accuweather(daily_url, f"hourly failed ({hourly_exc}); daily failed ({daily_exc})")
 
 
 def fetch_weatherforecast_day_forecast():
@@ -460,7 +523,10 @@ def build_rows_from_accuweather(accu):
             hour = START_HOUR + elapsed
             km = DISTANCE_KM * elapsed / duration
             lat, lon = route_at(km) if route_at else min(WEATHER_POINTS, key=lambda p: abs(p[0] - km))[2:4]
-            period = accu["day"] if hour < 19 else accu["night"]
+            hourly = accu.get("hourly", {})
+            period = hourly.get(hour)
+            if period is None:
+                period = accu["day"] if hour < 19 else accu["night"]
             rain = period["rain"]
             caution = rain >= 0.1 or "shower" in period["condition"].lower() or "rain" in period["condition"].lower()
             rows.append({
