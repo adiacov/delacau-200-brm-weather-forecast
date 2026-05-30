@@ -111,6 +111,7 @@ def get_text(url: str, timeout: int = 20):
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.9",
+        "Cookie": "awx_userSettings=unit:C; unit=C",
     })
     try:
         with urllib.request.urlopen(req, timeout=timeout) as response:
@@ -121,7 +122,7 @@ def get_text(url: str, timeout: int = 20):
         # AccuWeather intermittently blocks urllib despite browser headers; curl's
         # TLS/HTTP behavior is accepted more reliably and is available in CI/local Linux.
         completed = subprocess.run(
-            ["curl", "-L", "--max-time", str(timeout), "-A", req.headers["User-agent"], "-H", f"Accept-Language: {req.headers['Accept-language']}", url],
+            ["curl", "-L", "--max-time", str(timeout), "-A", req.headers["User-agent"], "-H", f"Accept-Language: {req.headers['Accept-language']}", "-H", "Cookie: awx_userSettings=unit:C; unit=C", url],
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -323,6 +324,27 @@ def extract_number(pattern, text, default=None):
     return float(match.group(1)) if match else default
 
 
+def fahrenheit_to_celsius(value):
+    return (value - 32) * 5 / 9
+
+
+def accuweather_temperature(card_text):
+    """Return AccuWeather temperature in Celsius.
+
+    AccuWeather can serve imperial units depending on cookies/geolocation even on the
+    same URL. The site often omits the unit letter near temperatures, so treat clearly
+    Fahrenheit-sized values as Fahrenheit as an extra safety net.
+    """
+    match = re.search(r'(-?\d+(?:\.\d+)?)\s*°\s*([CF])?', card_text, re.I)
+    if not match:
+        return None
+    value = float(match.group(1))
+    unit = (match.group(2) or "").upper()
+    if unit == "F" or (not unit and value > 45):
+        value = fahrenheit_to_celsius(value)
+    return value
+
+
 def accuweather_day_param(today: date | None = None):
     """AccuWeather's public daily page uses day=1 for today, day=2 for tomorrow, etc."""
     forecast_date = date.fromisoformat(FORECAST_DATE)
@@ -337,7 +359,7 @@ def unavailable_accuweather(url, reason):
 
 
 def parse_accuweather_card(card_text):
-    temp = extract_number(r'(\d+)°', card_text)
+    temp = accuweather_temperature(card_text)
     wind_match = re.search(r'Wind\s+([A-Z]+)\s+(\d+)\s*km/h', card_text)
     gust = extract_number(r'Wind Gusts\s+(\d+)\s*km/h', card_text)
     rain = extract_number(r'(?:Rain|Precipitation)\s+(\d+(?:\.\d+)?)\s*mm', card_text, 0.0)
@@ -366,7 +388,7 @@ def parse_accuweather_hourly_card(card_text):
     if not time_match:
         return None, None
     hour = accuweather_hour_to_24(time_match.group(1), time_match.group(2))
-    temp = extract_number(r'(\d+)°', card_text)
+    temp = accuweather_temperature(card_text)
     wind_match = re.search(r'Wind\s+([A-Z]+)\s+(\d+)\s*km/h', card_text)
     gust = extract_number(r'Wind Gusts\s+(\d+)\s*km/h', card_text)
     probability = extract_number(r'LEARN MORE\s+(\d+)%', card_text, 0.0)
@@ -393,8 +415,8 @@ def fetch_accuweather_day_forecast():
     day_param = accuweather_day_param()
     expected_date = date.fromisoformat(FORECAST_DATE)
     expected_short_date = f"{expected_date.month}/{expected_date.day}"
-    hourly_url = f"https://www.accuweather.com/en/md/centru/1702848/hourly-weather-forecast/1702848?day={day_param}"
-    daily_url = f"https://www.accuweather.com/en/md/centru/1702848/daily-weather-forecast/1702848?day={day_param}"
+    hourly_url = f"https://www.accuweather.com/en/md/centru/1702848/hourly-weather-forecast/1702848?day={day_param}&unit=c"
+    daily_url = f"https://www.accuweather.com/en/md/centru/1702848/daily-weather-forecast/1702848?day={day_param}&unit=c"
 
     try:
         text = get_text(hourly_url, timeout=20)
