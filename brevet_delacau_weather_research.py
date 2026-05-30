@@ -9,11 +9,13 @@ import json
 import math
 import re
 import statistics
+import subprocess
+import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
-from datetime import datetime, timedelta, timezone
-from html import escape
+from datetime import date, datetime, timedelta, timezone
+from html import escape, unescape
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -105,9 +107,27 @@ def get_json(url: str, timeout: int = 20, headers: dict | None = None):
 
 
 def get_text(url: str, timeout: int = 20):
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=timeout) as response:
-        return response.read().decode("utf-8", "ignore")
+    req = urllib.request.Request(url, headers={
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            return response.read().decode("utf-8", "ignore")
+    except urllib.error.HTTPError as exc:
+        if exc.code != 403:
+            raise
+        # AccuWeather intermittently blocks urllib despite browser headers; curl's
+        # TLS/HTTP behavior is accepted more reliably and is available in CI/local Linux.
+        completed = subprocess.run(
+            ["curl", "-L", "--max-time", str(timeout), "-A", req.headers["User-agent"], "-H", f"Accept-Language: {req.headers['Accept-language']}", url],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        return completed.stdout
 
 
 def haversine_km(a, b):
@@ -295,7 +315,7 @@ def sample_hourly(data, weather_km, hour):
 
 
 def strip_tags(html):
-    return " ".join(re.sub(r"<[^>]+>", " ", html).split())
+    return " ".join(re.sub(r"<[^>]+>", " ", unescape(html)).split())
 
 
 def extract_number(pattern, text, default=None):
@@ -303,45 +323,70 @@ def extract_number(pattern, text, default=None):
     return float(match.group(1)) if match else default
 
 
-def fetch_accuweather_day_forecast():
-    """Best-effort AccuWeather-only source.
+def accuweather_day_param(today: date | None = None):
+    """AccuWeather's public daily page uses day=1 for today, day=2 for tomorrow, etc."""
+    forecast_date = date.fromisoformat(FORECAST_DATE)
+    today = today or datetime.now(TZ).date()
+    return max(1, (forecast_date - today).days + 1)
 
-    AccuWeather public page exposes day/night forecast for 31 May, not full hourly data
-    without an API key. We use those day/night values for the hourly route scenarios.
+
+def unavailable_accuweather(url, reason):
+    PLATFORM_STATUS["AccuWeather"] = f"Failed: {reason}"
+    empty = {"temp": None, "wind": None, "wind_max": None, "wind_dir": "—", "rain": 0.0, "condition": "forecast unavailable"}
+    return {"day": empty, "night": empty, "source_url": url, "status": PLATFORM_STATUS["AccuWeather"]}
+
+
+def parse_accuweather_card(card_text):
+    temp = extract_number(r'(\d+)°', card_text)
+    wind_match = re.search(r'Wind\s+([A-Z]+)\s+(\d+)\s*km/h', card_text)
+    gust = extract_number(r'Wind Gusts\s+(\d+)\s*km/h', card_text)
+    rain = extract_number(r'(?:Rain|Precipitation)\s+(\d+(?:\.\d+)?)\s*mm', card_text, 0.0)
+    condition_matches = re.findall(r'LEARN MORE\s+((?:(?!LEARN MORE).)+?)(?:\s+Max UV|\s+Wind\b)', card_text, re.I)
+    condition_match = re.search(r'\b((?:Mostly|Partly)\s+.+?|(?:Mainly\s+)?(?:clear|sunny)|Cloudy|Overcast|Rain|Showers?|Thunderstorms?)(?:\s+Max UV|\s+Wind|$)', card_text, re.I)
+    condition = condition_matches[-1] if condition_matches else condition_match.group(1) if condition_match else "forecast"
+    return {
+        "temp": temp,
+        "wind": float(wind_match.group(2)) if wind_match else None,
+        "wind_max": gust,
+        "wind_dir": wind_match.group(1) if wind_match else "—",
+        "rain": rain,
+        "condition": condition,
+    }
+
+
+def fetch_accuweather_day_forecast():
+    """Fetch AccuWeather day/night forecast for FORECAST_DATE.
+
+    AccuWeather's public page exposes day/night data, not full hourly data without an
+    API key. The `day` query parameter is relative to the current date, so it must be
+    calculated on every run; a hard-coded value drifts to the wrong forecast date.
     """
-    url = "https://www.accuweather.com/en/md/centru/1702848/daily-weather-forecast/1702848?day=6"
+    day_param = accuweather_day_param()
+    url = f"https://www.accuweather.com/en/md/centru/1702848/daily-weather-forecast/1702848?day={day_param}"
     try:
         text = get_text(url, timeout=20)
-        cards = re.findall(r'<div[^>]+class="[^"]*half-day-card[^"]*"[^>]*>(.*?)</div>\s*</a>', text, re.S)
+        starts = [m.start() for m in re.finditer(r'<div class="half-day-card\s+content-module\s+"', text)]
+        cards = []
+        for i, start in enumerate(starts[:2]):
+            end = starts[i + 1] if i + 1 < len(starts) else text.find('<div class="panel-ad', start)
+            cards.append(strip_tags(text[start:end if end > start else len(text)]))
         if len(cards) < 2:
-            cards = re.findall(r'<div[^>]+class="[^"]*half-day-card[^"]*"[^>]*>(.*?)(?=<div[^>]+class="[^"]*half-day-card|</body>)', text, re.S)
-        day_text = strip_tags(cards[0]) if cards else "Day 5/31 22° Mostly cloudy with a passing shower in the afternoon Wind NW 11 km/h Wind Gusts 37 km/h Precipitation 1.1 mm"
-        night_text = strip_tags(cards[1]) if len(cards) > 1 else "Night 5/31 13° Mainly clear Wind SSW 6 km/h Wind Gusts 20 km/h Precipitation 0.0 mm"
-        def parse(card_text, fallback_temp, fallback_dir, fallback_wind, fallback_gust, fallback_rain, fallback_cond):
-            temp = extract_number(r'(\d+)°', card_text, fallback_temp)
-            wind_match = re.search(r'Wind\s+([A-Z]+)\s+(\d+)\s*km/h', card_text)
-            gust = extract_number(r'Wind Gusts\s+(\d+)\s*km/h', card_text, fallback_gust)
-            rain = extract_number(r'(?:Rain|Precipitation)\s+(\d+(?:\.\d+)?)\s*mm', card_text, fallback_rain)
-            condition_match = re.search(r'(Mostly cloudy.*?|Mainly clear|Partly cloudy|Cloudy|Sunny|Clear)(?:\s+Max UV|\s+Wind|$)', card_text, re.I)
-            return {
-                "temp": temp,
-                "wind": float(wind_match.group(2)) if wind_match else fallback_wind,
-                "wind_max": gust,
-                "wind_dir": wind_match.group(1) if wind_match else fallback_dir,
-                "rain": rain,
-                "condition": condition_match.group(1) if condition_match else fallback_cond,
-            }
-        return {
-            "day": parse(day_text, 22, "NW", 11, 37, 1.1, "Mostly cloudy with a passing shower in the afternoon"),
-            "night": parse(night_text, 13, "SSW", 6, 20, 0.0, "Mainly clear"),
+            return unavailable_accuweather(url, "could not find day/night forecast cards")
+
+        expected_short_date = f"{date.fromisoformat(FORECAST_DATE).month}/{date.fromisoformat(FORECAST_DATE).day}"
+        if expected_short_date not in cards[0]:
+            return unavailable_accuweather(url, f"AccuWeather returned {cards[0][:40]!r}, expected {expected_short_date}")
+
+        forecast = {
+            "day": parse_accuweather_card(cards[0]),
+            "night": parse_accuweather_card(cards[1]),
             "source_url": url,
+            "status": f"Day/night forecast for {expected_short_date} from {url}",
         }
-    except Exception:
-        return {
-            "day": {"temp": 22, "wind": 11, "wind_max": 37, "wind_dir": "NW", "rain": 1.1, "condition": "Mostly cloudy with a passing shower in the afternoon"},
-            "night": {"temp": 13, "wind": 6, "wind_max": 20, "wind_dir": "SSW", "rain": 0.0, "condition": "Mainly clear"},
-            "source_url": url,
-        }
+        PLATFORM_STATUS["AccuWeather"] = forecast["status"]
+        return forecast
+    except Exception as exc:
+        return unavailable_accuweather(url, exc)
 
 
 def fetch_weatherforecast_day_forecast():
@@ -528,7 +573,12 @@ def weather_icon(row):
 
 def wind_arrow(direction):
     # Weather directions describe where wind comes from; arrow shows where it blows to.
-    return {"N": "↓", "NE": "↙", "E": "←", "SE": "↖", "S": "↑", "SW": "↗", "W": "→", "NW": "↘"}.get(direction, "·")
+    return {
+        "N": "↓", "NNE": "↓", "NE": "↙", "ENE": "↙",
+        "E": "←", "ESE": "←", "SE": "↖", "SSE": "↖",
+        "S": "↑", "SSW": "↑", "SW": "↗", "WSW": "↗",
+        "W": "→", "WNW": "→", "NW": "↘", "NNW": "↘",
+    }.get(direction, "·")
 
 
 def weather_label(row, lang):
@@ -717,7 +767,7 @@ def main():
     source_configs = {
         "ecmwf": ("ECMWF", ecmwf_rows, "ECMWF IFS hourly model forecast from Open-Meteo only."),
         "icon": ("ICON", icon_rows, "ICON hourly model forecast from Open-Meteo only."),
-        "accuweather": ("AccuWeather", accuweather_rows, "AccuWeather public day/night forecast only; values are applied to estimated route positions."),
+        "accuweather": ("AccuWeather", accuweather_rows, accu.get("status", "AccuWeather public day/night forecast only; values are applied to estimated route positions.")),
     }
     default_note = {
         "ro": "Pagina implicita foloseste ECMWF. Poti schimba sursa meteo din butoanele de mai jos.",
