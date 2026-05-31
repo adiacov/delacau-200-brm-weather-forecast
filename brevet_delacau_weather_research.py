@@ -420,22 +420,25 @@ def fetch_accuweather_day_forecast():
 
     try:
         text = get_text(hourly_url, timeout=20)
-        starts = [m.start() for m in re.finditer(r'<div[^>]+data-qa="(\d+)"[^>]+class="accordion-item hour"', text)]
-        if len(starts) < 24:
-            return unavailable_accuweather(hourly_url, "could not find 24 hourly forecast cards")
-        first_epoch = int(re.search(r'<div[^>]+data-qa="(\d+)"[^>]+class="accordion-item hour"', text).group(1))
-        first_dt = datetime.fromtimestamp(first_epoch, timezone.utc).astimezone(TZ)
-        if first_dt.date() != expected_date:
-            return unavailable_accuweather(hourly_url, f"AccuWeather returned hourly date {first_dt.date()}, expected {FORECAST_DATE}")
+        matches = list(re.finditer(r'<div[^>]+data-qa="(\d+)"[^>]+class="accordion-item hour"', text))
+        if not matches:
+            return unavailable_accuweather(hourly_url, "could not find hourly forecast cards")
 
         hourly = {}
-        for i, start in enumerate(starts[:24]):
-            end = starts[i + 1] if i + 1 < len(starts) else text.find("footer", start)
+        for i, match in enumerate(matches):
+            start = match.start()
+            end = matches[i + 1].start() if i + 1 < len(matches) else text.find("footer", start)
+            dt = datetime.fromtimestamp(int(match.group(1)), timezone.utc).astimezone(TZ)
+            if dt.date() != expected_date:
+                continue
             hour, row = parse_accuweather_hourly_card(strip_tags(text[start:end if end > start else len(text)]))
             if row is not None:
                 hourly[hour] = row
-        if len(hourly) < 24:
-            return unavailable_accuweather(hourly_url, "could not parse 24 hourly forecast cards")
+
+        needed_hours = set(range(START_HOUR, START_HOUR + max(DURATIONS) + 1))
+        missing_hours = sorted(needed_hours - set(hourly))
+        if missing_hours:
+            return unavailable_accuweather(hourly_url, f"missing required hourly forecast hours for {FORECAST_DATE}: {missing_hours}")
 
         day_rows = [row for hour, row in hourly.items() if 6 <= hour < 19]
         night_rows = [row for hour, row in hourly.items() if hour < 6 or hour >= 19]
