@@ -1,5 +1,9 @@
 # Project instructions for future developers / assistants
 
+> **ARCHIVED (2026-07-17).** Superseded by [Velometeo](https://github.com/adiacov/velometeo).
+> All pages redirect to the new site; the daily workflow was removed.
+> The rest of this file describes the pre-redirect project.
+
 ## Purpose
 
 This project maintains a static, GitHub Pages-ready weather forecast for **Delacau 200 BRM**, Moldova, **31 May 2026**.

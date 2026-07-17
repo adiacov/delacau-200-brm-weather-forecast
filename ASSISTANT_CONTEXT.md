@@ -1,5 +1,9 @@
 # Assistant context — compact source of truth
 
+> **ARCHIVED (2026-07-17).** Superseded by [Velometeo](https://github.com/adiacov/velometeo).
+> All pages redirect to `https://adiacov.github.io/velometeo/event.html?event=delacau-200-brm`.
+> Do not regenerate pages here. The rest of this file describes the pre-redirect project.
+
 Project path:
 
 ```bash
